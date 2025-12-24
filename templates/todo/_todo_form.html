@@ -1,0 +1,10 @@
+<form hx-post="{% url 'todo:create_todo_item' %}"
+      hx-target="#todo-list"
+      hx-swap="innerHTML"
+      hx-on::after-request="if(event.detail.successful) this.reset()"
+      class="mb-3">
+    <div class="input-group">
+        {{ form.description }}
+        <button type="submit" class="btn btn-primary">追加</button>
+    </div>
+</form>

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="docs-page">
+        <section class="docs-hero card">
+            <div class="card-body">
+                <div class="docs-hero-inner">
+                    <div>
+                        <h1 class="h3 mb-2">Yarukoto docs</h1>
+                        <p class="docs-lead mb-3">すぐに使える、シンプルなTodoアプリです。追加・完了・削除・ページ送りが軽快に動きます。</p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a class="btn btn-sm btn-primary" href="{% url 'todo:todo_list' %}">Todoへ</a>
+                            <a class="btn btn-sm btn-outline-secondary" href="#how">使い方</a>
+                            <a class="btn btn-sm btn-outline-secondary" href="#architecture">構成</a>
+                            <a class="btn btn-sm btn-outline-secondary" href="#htmx">HTMX</a>
+                        </div>
+                    </div>
+                    <div class="docs-badges">
+                        <span class="badge text-bg-light border">Django 6</span>
+                        <span class="badge text-bg-light border">SQLite (WAL)</span>
+                        <span class="badge text-bg-light border">Bootstrap 5</span>
+                        <span class="badge text-bg-light border">HTMX 2</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="how" class="docs-section card docs-fade-in docs-delay-1">
+            <div class="card-header">使い方</div>
+            <div class="card-body">
+                <ol class="mb-0">
+                    <li>ログインしてTodo一覧にアクセスします。</li>
+                    <li>フォームからTodoを追加します（入力→追加でリストが部分更新されます）。</li>
+                    <li>チェックで完了/未完了を切り替え、ゴミ箱で削除できます。</li>
+                    <li>ページ送りもHTMXで部分更新します。</li>
+                </ol>
+            </div>
+        </section>
+        <section id="architecture" class="docs-section card docs-fade-in docs-delay-2">
+            <div class="card-header">アーキテクチャ</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-lg-6">
+                        <div class="docs-mini card">
+                            <div class="card-body">
+                                <h2 class="h6 mb-2">サーバーサイド中心</h2>
+                                <p class="text-muted mb-0">HTMLはテンプレートでレンダリングし、必要なところだけHTMXで差し替えます。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="docs-mini card">
+                            <div class="card-body">
+                                <h2 class="h6 mb-2">テンプレートはパーシャル分割</h2>
+                                <p class="text-muted mb-0">リスト/行/フォーム/ページネーションを小さなテンプレートに分けて、更新を最小化します。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="docs-mini card">
+                            <div class="card-body">
+                                <h2 class="h6 mb-2">SQLite (WAL)</h2>
+                                <p class="text-muted mb-0">開発用途で扱いやすいSQLiteを採用し、WALモードで並行アクセスを改善しています。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="docs-mini card">
+                            <div class="card-body">
+                                <h2 class="h6 mb-2">型ヒント / テスト</h2>
+                                <p class="text-muted mb-0">設定・ビューは型注釈を付け、tests/ 配下でモデル/ビュー/統合をカバーします。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="htmx" class="docs-section card docs-fade-in docs-delay-3">
+            <div class="card-header">HTMXのポイント</div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li class="mb-2">
+                        <strong>部分更新</strong>: リスト本体は <span class="badge text-bg-light border">tbody</span> をターゲットに差し替えます。
+                    </li>
+                    <li class="mb-2">
+                        <strong>OOBスワップ</strong>: 1つのレスポンスで、リストとページネーション情報を同期更新します。
+                    </li>
+                    <li>
+                        <strong>CSRF</strong>: baseテンプレートで <span class="badge text-bg-light border">hx-headers</span> を設定し、POST/DELETEも安全に送れます。
+                    </li>
+                </ul>
+            </div>
+        </section>
+        <footer class="docs-footer text-muted small">
+            <span>最小構成で、速く・シンプルに。</span>
+        </footer>
+    </div>
+{% endblock content %}

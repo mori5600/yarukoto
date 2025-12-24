@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="d-flex align-items-center justify-content-center auth-wrapper">
+        <div class="card auth-card auth-fade-in">
+            <div class="card-body p-4">
+                <div class="auth-header">
+                    <h1 class="auth-brand">Yarukoto</h1>
+                    <div class="auth-subtitle">ログイン</div>
+                </div>
+                {% if form.errors %}<div class="auth-error" role="alert">ユーザー名またはパスワードが正しくありません。</div>{% endif %}
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">{{ form.username }}</div>
+                    <div class="mb-3">{{ form.password }}</div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">ログイン</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="sticky-header">
+        {% include "todo/_todo_form.html" %}
+        {% include "todo/_todo_form_errors.html" %}
+        {% include "todo/_pagination_info.html" %}
+    </div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col" class="col-checkbox"></th>
+                <th scope="col">タスク</th>
+                <th scope="col" class="col-actions"></th>
+            </tr>
+        </thead>
+        <tbody id="todo-list">
+            {% include "todo/_todo_list.html" %}
+        </tbody>
+    </table>
+{% endblock content %}

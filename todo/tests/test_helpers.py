@@ -1,0 +1,54 @@
+"""ヘルパー関数のテスト。"""
+
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+
+from ..models import TodoItem
+from ..views import get_paginated_todos
+
+
+class GetPaginatedTodosTests(TestCase):
+    """get_paginated_todos関数のテストケース。"""
+
+    def setUp(self):
+        """テスト用のTodoアイテムを作成する。"""
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(username="user", password="pass")
+        for i in range(25):
+            TodoItem.objects.create(user=self.user, description=f"タスク {i + 1}")
+
+    def test_default_pagination(self):
+        """デフォルトのページネーション（10件/ページ）が正しく動作することを確認する。"""
+        assert self.user.id is not None
+        page_obj = get_paginated_todos(user_id=self.user.id)
+        self.assertEqual(len(page_obj), 10)
+        self.assertEqual(page_obj.paginator.count, 25)
+        self.assertEqual(page_obj.paginator.num_pages, 3)
+
+    def test_custom_page_number(self):
+        """指定したページ番号が正しく取得されることを確認する。"""
+        assert self.user.id is not None
+        page_obj = get_paginated_todos(user_id=self.user.id, page_number=2)
+        self.assertEqual(page_obj.number, 2)
+        self.assertEqual(len(page_obj), 10)
+
+    def test_custom_per_page(self):
+        """カスタムのページサイズが正しく適用されることを確認する。"""
+        assert self.user.id is not None
+        page_obj = get_paginated_todos(user_id=self.user.id, per_page=5)
+        self.assertEqual(len(page_obj), 5)
+        self.assertEqual(page_obj.paginator.num_pages, 5)
+
+    def test_invalid_page_number(self):
+        """無効なページ番号でも最終ページが返されることを確認する。"""
+        assert self.user.id is not None
+        page_obj = get_paginated_todos(user_id=self.user.id, page_number=999)
+        self.assertEqual(page_obj.number, 3)  # 最終ページ
+
+    def test_ordering(self):
+        """Todoアイテムが作成日時の降順で並ぶことを確認する。"""
+        assert self.user.id is not None
+        page_obj = get_paginated_todos(user_id=self.user.id)
+        first_item = page_obj[0]
+        last_item = page_obj[len(page_obj) - 1]
+        self.assertGreater(first_item.created_at, last_item.created_at)
