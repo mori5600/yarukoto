@@ -1,7 +1,6 @@
-<div id="pagination-info"
-     class="d-flex justify-content-between align-items-center mb-2">
-    <small class="text-muted">全{{ page_obj.paginator.count }}件</small>
-    <div class="d-flex gap-2">
+<div id="pagination-info" class="todo-info">
+    <span class="todo-info__count">全{{ page_obj.paginator.count }}件</span>
+    <div class="todo-info__actions">
         {% if page_obj.paginator.count > 0 %}
             <button class="btn btn-sm btn-outline-danger"
                     hx-delete="{% url 'todo:delete_all_todo_items' %}"

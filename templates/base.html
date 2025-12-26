@@ -15,18 +15,19 @@
         <header>
             <nav class="navbar bg-body-tertiary">
                 <div class="container">
-                    <a class="navbar-brand mb-0 h1" href="/">Yarukoto</a>
+                    <div class="d-flex align-items-center gap-3">
+                        <a class="navbar-brand mb-0 h1" href="/">Yarukoto</a>
+                        <a class="nav-link text-muted" href="{% url 'todo:docs' %}">Docs</a>
+                    </div>
                     <div class="d-flex align-items-center gap-2">
-                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'todo:docs' %}">docs</a>
                         {% if user.is_authenticated %}
-                            <span class="text-muted small">{{ user.get_username }}</span>
+                            <span class="text-muted small me-1">{{ user.get_username }}</span>
                             <form method="post" action="{% url 'account_logout' %}" class="m-0">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm btn-outline-secondary">ログアウト</button>
                             </form>
                         {% else %}
-                            <a class="btn btn-sm btn-outline-primary"
-                               href="{% url 'account_login' %}">ログイン</a>
+                            <a class="btn btn-sm btn-primary" href="{% url 'account_login' %}">ログイン</a>
                         {% endif %}
                     </div>
                 </div>

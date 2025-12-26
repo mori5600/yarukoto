@@ -2,9 +2,9 @@
       hx-target="#todo-list"
       hx-swap="innerHTML"
       hx-on::after-request="if(event.detail.successful) this.reset()"
-      class="mb-3">
-    <div class="input-group">
+      class="todo-form">
+    <div class="todo-form__inner">
         {{ form.description }}
-        <button type="submit" class="btn btn-primary">追加</button>
+        <button type="submit" class="btn btn-primary todo-form__submit">追加</button>
     </div>
 </form>

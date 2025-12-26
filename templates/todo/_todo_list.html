@@ -1,19 +1,19 @@
 {% for todo_item in page_obj %}
     {% include "todo/_todo_item.html" %}
 {% empty %}
-    <tr>
-        <td colspan="3" class="text-center text-muted">Todoがありません</td>
-    </tr>
+    <div class="todo-empty">
+        <div class="todo-empty__icon">📝</div>
+        <p class="todo-empty__text">Todoがありません</p>
+    </div>
 {% endfor %}
 {% if page_obj.has_next %}
-    <tr id="infinite-scroll-trigger"
-        hx-get="{% url 'todo:todo_items' %}?page={{ page_obj.next_page_number }}"
-        hx-trigger="revealed"
-        hx-swap="outerHTML">
-        <td colspan="3" class="text-center text-muted py-3">
-            <div class="spinner-border spinner-border-sm" role="status">
-                <span class="visually-hidden">読み込み中...</span>
-            </div>
-        </td>
-    </tr>
+    <div id="infinite-scroll-trigger"
+         hx-get="{% url 'todo:todo_items' %}?page={{ page_obj.next_page_number }}"
+         hx-trigger="revealed"
+         hx-swap="outerHTML"
+         class="todo-loading">
+        <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">読み込み中...</span>
+        </div>
+    </div>
 {% endif %}

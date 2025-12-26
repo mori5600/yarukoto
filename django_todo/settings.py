@@ -26,12 +26,43 @@ TESTING: bool = "test" in sys.argv
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY: str = "django-insecure-47vq$-9*n5s-+n)%1@x)355w!sxx(ctig---p%t#*&c#49_swr"
+# 本番では環境変数 DJANGO_SECRET_KEY を必ず設定すること
+SECRET_KEY: str = os.getenv(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-47vq$-9*n5s-+n)%1@x)355w!sxx(ctig---p%t#*&c#49_swr",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG: bool = True
+# 本番では環境変数 DJANGO_DEBUG=0 を設定
+DEBUG: bool = os.getenv("DJANGO_DEBUG", "1") == "1"
 
-ALLOWED_HOSTS: list[str] = []
+
+def _split_csv(value: str) -> list[str]:
+    """カンマ区切りの文字列をリストへ変換する。
+
+    Args:
+        value: カンマ区切り文字列。
+
+    Returns:
+        空要素を除去した文字列リスト。
+    """
+
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+# Host header validation
+# 本番は環境変数 DJANGO_ALLOWED_HOSTS で明示指定する。
+ALLOWED_HOSTS: list[str] = _split_csv(os.getenv("DJANGO_ALLOWED_HOSTS", ""))
+
+# 開発・テスト時は未指定でもローカルアクセスしやすいデフォルトを許可する。
+if not ALLOWED_HOSTS and (DEBUG or TESTING):
+    ALLOWED_HOSTS = [
+        "localhost",
+        "127.0.0.1",
+        "0.0.0.0",
+        "[::1]",
+        "testserver",
+    ]
 
 
 # Application definition
@@ -48,6 +79,7 @@ INSTALLED_APPS: list[str] = [
 
 MIDDLEWARE: list[str] = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # 静的ファイル配信
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -90,11 +122,14 @@ CACHES: dict[str, object] = {
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+# 本番ではデータを /app/data に配置して永続化ボリュームにマウント
+
+_DB_PATH: Path = Path(os.getenv("DJANGO_DB_PATH", BASE_DIR / "db.sqlite3"))
 
 DATABASES: dict[str, object] = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": _DB_PATH,
         "OPTIONS": {
             # WALモードで並行アクセスを改善
             "init_command": "PRAGMA journal_mode=WAL;",
@@ -139,6 +174,9 @@ USE_TZ: bool = True
 
 STATIC_URL: str = "static/"
 STATICFILES_DIRS: list[Path] = [BASE_DIR / "templates" / "static"]
+
+# collectstatic の出力先
+STATIC_ROOT: Path = BASE_DIR / "staticfiles"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
@@ -214,3 +252,32 @@ LOGGING: dict[str, object] = {
         },
     },
 }
+
+
+# ===========================================
+# 本番セキュリティ設定
+# ===========================================
+if not DEBUG:
+    # HTTPS設定
+    SECURE_PROXY_SSL_HEADER: tuple[str, str] = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT: bool = os.getenv("DJANGO_SECURE_SSL_REDIRECT", "0") == "1"
+
+    # セッション・クッキー設定
+    SESSION_COOKIE_SECURE: bool = True
+    CSRF_COOKIE_SECURE: bool = True
+    SESSION_COOKIE_HTTPONLY: bool = True
+
+    # HSTS設定（HTTPSを強制）
+    SECURE_HSTS_SECONDS: int = 31536000  # 1年
+    SECURE_HSTS_INCLUDE_SUBDOMAINS: bool = True
+    SECURE_HSTS_PRELOAD: bool = True
+
+    # その他セキュリティヘッダー
+    SECURE_CONTENT_TYPE_NOSNIFF: bool = True
+    X_FRAME_OPTIONS: str = "DENY"
+
+    # CSRF信頼オリジン（リバースプロキシ経由の場合に必要）
+    _csrf_origins = os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "")
+    if _csrf_origins:
+        CSRF_TRUSTED_ORIGINS: list[str] = _split_csv(_csrf_origins)
+
