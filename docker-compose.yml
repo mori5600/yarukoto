@@ -1,15 +1,48 @@
+# 本番運用用 Docker Compose
+
 services:
   web:
     build:
       context: .
+    container_name: yarukoto-web
+    restart: unless-stopped
     ports:
-      - "8000:8000"
-    volumes:
-      - .:/app
-      - venv:/app/.venv
+      - "${PORT:-8000}:8000"
     environment:
-      - PYTHONDONTWRITEBYTECODE=1
-      - PYTHONUNBUFFERED=1
+      # Django設定（必須）
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:?Secret key is required}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      - DJANGO_DEBUG=0
+      - DJANGO_DB_PATH=${DJANGO_DB_PATH:-/app/data/db.sqlite3}
+      # CSRF設定（HTTPSの場合）
+      - DJANGO_CSRF_TRUSTED_ORIGINS=${DJANGO_CSRF_TRUSTED_ORIGINS:-}
+      # gunicorn設定
+      - GUNICORN_WORKERS=${GUNICORN_WORKERS:-2}
+      - GUNICORN_THREADS=${GUNICORN_THREADS:-4}
+      - GUNICORN_TIMEOUT=${GUNICORN_TIMEOUT:-30}
+    volumes:
+      # SQLiteデータベースの永続化
+      - sqlite_data:/app/data
+      # ログの永続化（オプション）
+      - app_logs:/app/logs
+    # リソース制限（軽量運用向け）
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+    # セキュリティ設定
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64M,mode=1777
 
 volumes:
-  venv:
+  sqlite_data:
+    name: yarukoto-sqlite
+  app_logs:
+    name: yarukoto-logs

@@ -1,24 +1,69 @@
 # syntax=docker/dockerfile:1
-FROM python:3.12-slim
+# 本番用マルチステージビルド
+
+# ============================================
+# Stage 1: Builder - 依存関係のインストール
+# ============================================
+FROM python:3.12-slim AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Use uv + uv.lock for reproducible installs
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir uv
+# uv をインストール（高速なパッケージマネージャ）
+RUN pip install --no-cache-dir uv
 
-# Create writable dirs used by the app
-RUN mkdir -p /app/logs
-
-# Install dependencies first (better build cache)
+# 依存関係ファイルをコピー
 COPY pyproject.toml uv.lock /app/
-RUN uv sync --frozen
 
-COPY . /app
+# 本番用依存関係をインストール（devを除く）
+RUN uv sync --frozen --no-dev
 
-EXPOSE 8000
+# ============================================
+# Stage 2: Production - 最小限の実行環境
+# ============================================
+FROM python:3.12-slim AS production
 
-CMD ["uv", "run", "./manage.py", "runserver", "0.0.0.0:8000"]
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    # 本番環境フラグ
+    DJANGO_DEBUG=0 \
+    # gunicorn設定
+    GUNICORN_WORKERS=2 \
+    GUNICORN_THREADS=4 \
+    GUNICORN_TIMEOUT=30 \
+    # アプリ設定
+    PORT=8000
+
+WORKDIR /app
+
+# セキュリティ: 非rootユーザーで実行
+RUN groupadd --gid 1000 appgroup && \
+    useradd --uid 1000 --gid appgroup --shell /bin/bash --create-home appuser
+
+# 必要な依存関係のみをbuilderからコピー
+COPY --from=builder /app/.venv /app/.venv
+
+# アプリケーションコードをコピー
+COPY --chown=appuser:appgroup . /app/
+
+# entrypoint（ボリュームの権限調整 + 非root実行）
+RUN chmod +x /app/entrypoint.sh
+
+# 必要なディレクトリを作成
+RUN mkdir -p /app/logs /app/data /app/staticfiles && \
+    chown -R appuser:appgroup /app/logs /app/data /app/staticfiles
+
+# 静的ファイルを収集
+RUN /app/.venv/bin/python manage.py collectstatic --noinput
+
+EXPOSE ${PORT}
+
+# ヘルスチェック
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:${PORT}/accounts/login/')" || exit 1
+
+# entrypointで権限調整後にgunicorn起動
+ENTRYPOINT ["/app/entrypoint.sh"]
+
