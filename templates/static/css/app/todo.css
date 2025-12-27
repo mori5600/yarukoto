@@ -1,0 +1,338 @@
+/* Todo一覧 */
+.todo-container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.todo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 1rem;
+  box-shadow: var(--shadow);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: todoFadeIn 300ms ease-out both;
+}
+
+.todo-item:hover {
+  transform: translateX(4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-color);
+}
+
+.todo-item--completed {
+  opacity: 0.7;
+}
+
+.todo-item--completed:hover {
+  border-color: var(--success-color);
+}
+
+.todo-item__checkbox {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.todo-item__text {
+  flex: 1;
+  font-size: 1rem;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.todo-item__delete {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  border-radius: 0.75rem;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0;
+}
+
+.todo-item:hover .todo-item__delete {
+  opacity: 1;
+}
+
+.todo-item__delete:hover {
+  background: rgba(244, 63, 94, 0.1);
+  color: var(--danger-color);
+  transform: scale(1.1);
+}
+
+.todo-item__delete:active {
+  transform: scale(0.95);
+}
+
+/* 空の状態 */
+.todo-empty {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: var(--text-secondary);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px dashed var(--border-color);
+  border-radius: 1rem;
+}
+
+.todo-empty__icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.todo-empty__text {
+  font-size: 1.125rem;
+  margin: 0;
+}
+
+/* ローディング */
+.todo-loading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+/* 旧テーブル用（互換性維持） */
+.col-checkbox {
+  width: 50px;
+}
+
+.col-actions {
+  width: 80px;
+}
+
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 1.5rem 0;
+  margin-bottom: 0.5rem;
+}
+
+/* Todo行のアニメーション */
+.todo-row {
+  animation: todoFadeIn 300ms ease-out both;
+}
+
+@keyframes todoFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 完了済みタスク */
+.text-decoration-line-through {
+  color: var(--text-secondary);
+  opacity: 0.6;
+  text-decoration: line-through;
+  text-decoration-color: var(--success-color);
+}
+
+/* Todoフォーム */
+.todo-form {
+  margin-bottom: 1.5rem;
+}
+
+.todo-form__inner {
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.todo-form__inner .form-control {
+  flex: 1;
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
+}
+
+.todo-form__submit {
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+/* Todo情報バー */
+.todo-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.todo-info__count {
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.todo-info__actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* テーブル */
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table thead th {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: none;
+  padding: 0.875rem 1rem;
+}
+
+.table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+  background: var(--glass-bg);
+  backdrop-filter: blur(4px);
+}
+
+.table tbody td {
+  padding: 1.2rem 1rem;
+  vertical-align: middle;
+  border: none;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* チェックボックス - カスタムスタイル */
+.form-check-input {
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 2px solid var(--text-secondary);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  position: relative;
+  appearance: none;
+  background: var(--bg-secondary);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.35) inset, var(--shadow);
+}
+
+.form-check-input:hover {
+  border-color: var(--success-color);
+  transform: scale(1.1);
+  box-shadow: 0 0 12px var(--success-glow);
+}
+
+.form-check-input:checked {
+  background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+  border-color: var(--success-color);
+  box-shadow: 0 0 16px var(--success-glow);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%231e293b' stroke-linecap='round' stroke-linejoin='round' stroke-width='3.2' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.form-check-input:focus {
+  box-shadow: 0 0 0 4px var(--success-glow);
+  outline: none;
+}
+
+.form-check-input:active {
+  transform: scale(0.95);
+}
+
+/* チェックボックスのラベル */
+.form-check {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0;
+}
+
+/* 完了済みタスク（重複を避けるために移動） */
+/* .text-decoration-line-through は上部で定義済み */
+
+/* ページネーション */
+.pagination {
+  gap: 0.5rem;
+}
+
+.page-link {
+  border: 1.5px solid var(--border-color);
+  border-radius: 0.5rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  padding: 0.5rem 0.875rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.page-link:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  box-shadow: 0 0 12px var(--primary-glow);
+}
+
+.page-item.active .page-link {
+  background: var(--gradient-primary);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 4px 14px var(--primary-glow);
+}
+
+.page-item.disabled .page-link {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .table tbody td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.875rem;
+  }
+}
