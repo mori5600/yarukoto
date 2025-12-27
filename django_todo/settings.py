@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 import sys
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR: Path = Path(__file__).resolve().parent.parent
@@ -124,19 +125,45 @@ CACHES: dict[str, object] = {
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 # 本番ではデータを /app/data に配置して永続化ボリュームにマウント
 
-_DB_PATH: Path = Path(os.getenv("DJANGO_DB_PATH", BASE_DIR / "db.sqlite3"))
 
-DATABASES: dict[str, object] = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": _DB_PATH,
+def _db_from_database_url(database_url: str) -> dict[str, object]:
+    u = urlparse(database_url)
+    qs = parse_qs(u.query)
+    # postgres://user:pass@host:5432/dbname?sslmode=require
+    # postgresql://user:pass@host:5432/dbname?sslmode=require
+    sslmode = qs.get("sslmode", [""])[0] or os.getenv("PGSSLMODE", "prefer")
+    return {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": u.path.lstrip("/"),
+        "USER": u.username or "",
+        "PASSWORD": u.password or "",
+        "HOST": u.hostname or "",
+        "PORT": str(u.port or 5432),
+        # 接続を使い回して速度・負荷を改善（0は毎回接続）
+        "CONN_MAX_AGE": int(os.getenv("DJANGO_CONN_MAX_AGE", "60")),
+        # 外部DBはSSL必須のことが多い
         "OPTIONS": {
-            # WALモードで並行アクセスを改善
-            "init_command": "PRAGMA journal_mode=WAL;",
-            "timeout": 20,  # ロック待機時間（秒）
+            "sslmode": sslmode,  # require にすることも多い
         },
     }
-}
+
+
+DATABASE_URL: str = os.getenv("DATABASE_URL", "")
+
+if DATABASE_URL:
+    DATABASES = {"default": _db_from_database_url(DATABASE_URL)}
+else:
+    _DB_PATH: Path = Path(os.getenv("DJANGO_DB_PATH", BASE_DIR / "db.sqlite3"))
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": _DB_PATH,
+            "OPTIONS": {
+                "init_command": "PRAGMA journal_mode=WAL;",
+                "timeout": 20,
+            },
+        }
+    }
 
 
 # Password validation
@@ -280,4 +307,3 @@ if not DEBUG:
     _csrf_origins = os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "")
     if _csrf_origins:
         CSRF_TRUSTED_ORIGINS: list[str] = _split_csv(_csrf_origins)
-

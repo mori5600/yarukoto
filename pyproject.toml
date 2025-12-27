@@ -4,7 +4,12 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["django>=6.0", "gunicorn>=23.0.0", "whitenoise>=6.8.0"]
+dependencies = [
+    "django>=6.0",
+    "gunicorn>=23.0.0",
+    "psycopg[binary]>=3.3.2",
+    "whitenoise>=6.8.0",
+]
 
 [dependency-groups]
 dev = ["django-stubs[compatible-mypy]>=5.2.8", "djlint>=1.36.4"]

@@ -52,8 +52,8 @@ COPY --chown=appuser:appgroup . /app/
 RUN chmod +x /app/entrypoint.sh
 
 # 必要なディレクトリを作成
-RUN mkdir -p /app/logs /app/data /app/staticfiles && \
-    chown -R appuser:appgroup /app/logs /app/data /app/staticfiles
+RUN mkdir -p /app/logs /app/staticfiles && \
+    chown -R appuser:appgroup /app/logs /app/staticfiles
 
 # 静的ファイルを収集
 RUN /app/.venv/bin/python manage.py collectstatic --noinput

@@ -13,14 +13,10 @@ services:
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:?Secret key is required}
       - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
       - DJANGO_DEBUG=0
-      - DJANGO_DB_PATH=${DJANGO_DB_PATH:-/app/data/db.sqlite3}
+      # 本番は外部Postgres（DATABASE_URL必須）
+      - DATABASE_URL=${DATABASE_URL:?DATABASE_URL is required}
       # 起動時処理
       - DJANGO_AUTO_MIGRATE=${DJANGO_AUTO_MIGRATE:-1}
-      - DJANGO_CREATE_SUPERUSER=${DJANGO_CREATE_SUPERUSER:-0}
-      - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME:-}
-      - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-}
-      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD:-}
-      - DJANGO_SUPERUSER_UPDATE_PASSWORD=${DJANGO_SUPERUSER_UPDATE_PASSWORD:-0}
       # CSRF設定（HTTPSの場合）
       - DJANGO_CSRF_TRUSTED_ORIGINS=${DJANGO_CSRF_TRUSTED_ORIGINS:-}
       # gunicorn設定
@@ -28,8 +24,6 @@ services:
       - GUNICORN_THREADS=${GUNICORN_THREADS:-4}
       - GUNICORN_TIMEOUT=${GUNICORN_TIMEOUT:-30}
     volumes:
-      # SQLiteデータベースの永続化
-      - sqlite_data:/app/data
       # ログの永続化（オプション）
       - app_logs:/app/logs
     # リソース制限（軽量運用向け）
@@ -49,7 +43,5 @@ services:
       - /tmp:size=64M,mode=1777
 
 volumes:
-  sqlite_data:
-    name: yarukoto-sqlite
   app_logs:
     name: yarukoto-logs
