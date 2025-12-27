@@ -223,3 +223,5 @@ __marimo__/
 .github/
 
 .DS_Store
+
+staticfiles/
