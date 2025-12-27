@@ -652,14 +652,15 @@ body::before {
 .form-check-input {
   width: 1.75rem;
   height: 1.75rem;
-  border: 2px solid var(--border-color);
+  border: 2px solid var(--text-secondary);
   border-radius: 0.5rem;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
   position: relative;
   appearance: none;
-  background: var(--glass-bg);
+  background: var(--bg-secondary);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.35) inset, var(--shadow);
 }
 
 .form-check-input:hover {
@@ -672,7 +673,7 @@ body::before {
   background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
   border-color: var(--success-color);
   box-shadow: 0 0 16px var(--success-glow);
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%231e293b' stroke-linecap='round' stroke-linejoin='round' stroke-width='3.2' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
   background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
