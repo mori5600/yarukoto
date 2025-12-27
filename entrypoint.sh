@@ -25,7 +25,9 @@ if [ "$(id -u)" = "0" ]; then
       echo "[entrypoint] DJANGO_CREATE_SUPERUSER=1 ですが、DJANGO_SUPERUSER_USERNAME / DJANGO_SUPERUSER_PASSWORD が未設定です。スキップします。" >&2
     else
       echo "[entrypoint] Ensuring superuser exists..."
-      su -s /bin/sh appuser -c "/app/.venv/bin/python -c \"import os; from django.contrib.auth import get_user_model; User=get_user_model(); u=os.environ['DJANGO_SUPERUSER_USERNAME']; p=os.environ['DJANGO_SUPERUSER_PASSWORD']; e=os.environ.get('DJANGO_SUPERUSER_EMAIL',''); exists=User._default_manager.filter(username=u).exists(); (print('Superuser already exists:', u) if exists else (User._default_manager.create_superuser(u, e, p), print('Created superuser:', u)))\""
+      su -s /bin/sh appuser -c "/app/.venv/bin/python manage.py shell -c 'import os; from django.contrib.auth import get_user_model; User=get_user_model(); username=os.environ["DJANGO_SUPERUSER_USERNAME"]; password=os.environ["DJANGO_SUPERUSER_PASSWORD"]; email=os.environ.get("DJANGO_SUPERUSER_EMAIL", ""); update_pw=os.environ.get("DJANGO_SUPERUSER_UPDATE_PASSWORD", "0") == "1"; user, created=User._default_manager.get_or_create(username=username, defaults={"email": email, "is_staff": True, "is_superuser": True}); changed=False; \
+  (setattr(user, "is_staff", True), setattr(user, "is_superuser", True), setattr(user, "email", email) if email else None); \
+  (user.set_password(password), setattr(user, "email", email) if email else None, user.save(), print("Created superuser:", username)) if created else (user.set_password(password), user.save(), print("Updated superuser password:", username)) if update_pw else print("Superuser already exists:", username)'"
     fi
   fi
 
