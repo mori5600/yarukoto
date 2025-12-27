@@ -16,9 +16,10 @@
                     </div>
                     <div class="docs-badges">
                         <span class="badge text-bg-light border">Django 6</span>
-                        <span class="badge text-bg-light border">SQLite (WAL)</span>
+                        <span class="badge text-bg-light border">SQLite / PostgreSQL</span>
                         <span class="badge text-bg-light border">Bootstrap 5</span>
                         <span class="badge text-bg-light border">HTMX 2</span>
+                        <span class="badge text-bg-light border">無限スクロール</span>
                     </div>
                 </div>
             </div>
@@ -27,10 +28,11 @@
             <div class="card-header">使い方</div>
             <div class="card-body">
                 <ol class="mb-0">
-                    <li>ログインしてTodo一覧にアクセスします。</li>
-                    <li>フォームからTodoを追加します（入力→追加でリストが部分更新されます）。</li>
-                    <li>チェックで完了/未完了を切り替え、ゴミ箱で削除できます。</li>
-                    <li>ページ送りもHTMXで部分更新します。</li>
+                    <li>ログインしてTodo一覧にアクセスします（未ログインの場合は自動的にログインページへ）。</li>
+                    <li>フォームからTodoを追加します（入力→追加でリストがHTMXで部分更新されます）。</li>
+                    <li>チェックボックスで完了/未完了を切り替え、ゴミ箱アイコンで個別削除できます。</li>
+                    <li>スクロールすると自動的に次のTodoを読み込みます（無限スクロール）。</li>
+                    <li>「全て削除」ボタンで全Todoを一括削除できます。</li>
                 </ol>
             </div>
         </section>
@@ -49,16 +51,32 @@
                     <div class="col-12 col-lg-6">
                         <div class="docs-mini card">
                             <div class="card-body">
-                                <h2 class="h6 mb-2">テンプレートはパーシャル分割</h2>
-                                <p class="text-muted mb-0">リスト/行/フォーム/ページネーションを小さなテンプレートに分けて、更新を最小化します。</p>
+                                <h2 class="h6 mb-2">ユーザー認証</h2>
+                                <p class="text-muted mb-0">Django標準認証を使用し、Todoは各ユーザーに紐づけて管理されます。</p>
                             </div>
                         </div>
                     </div>
                     <div class="col-12 col-lg-6">
                         <div class="docs-mini card">
                             <div class="card-body">
-                                <h2 class="h6 mb-2">SQLite (WAL)</h2>
-                                <p class="text-muted mb-0">開発用途で扱いやすいSQLiteを採用し、WALモードで並行アクセスを改善しています。</p>
+                                <h2 class="h6 mb-2">テンプレートはパーシャル分割</h2>
+                                <p class="text-muted mb-0">リスト/アイテム/フォーム/エラーを小さなテンプレートに分けて、更新を最小化します。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="docs-mini card">
+                            <div class="card-body">
+                                <h2 class="h6 mb-2">無限スクロール</h2>
+                                <p class="text-muted mb-0">HTMXの`revealed`トリガーでスクロール時に次ページを自動読み込みします。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="docs-mini card">
+                            <div class="card-body">
+                                <h2 class="h6 mb-2">SQLite / PostgreSQL</h2>
+                                <p class="text-muted mb-0">開発はSQLite (WAL)、本番はPostgreSQLにも対応。環境変数で切り替え可能。</p>
                             </div>
                         </div>
                     </div>
@@ -66,7 +84,7 @@
                         <div class="docs-mini card">
                             <div class="card-body">
                                 <h2 class="h6 mb-2">型ヒント / テスト</h2>
-                                <p class="text-muted mb-0">設定・ビューは型注釈を付け、tests/ 配下でモデル/ビュー/統合をカバーします。</p>
+                                <p class="text-muted mb-0">包括的な型注釈を使用し、tests/ 配下でモデル/ビュー/統合をカバーします。</p>
                             </div>
                         </div>
                     </div>
@@ -78,10 +96,16 @@
             <div class="card-body">
                 <ul class="mb-0">
                     <li class="mb-2">
-                        <strong>部分更新</strong>: リスト本体は <span class="badge text-bg-light border">tbody</span> をターゲットに差し替えます。
+                        <strong>部分更新</strong>: リスト本体 <span class="badge text-bg-light border">#todo-list</span> をターゲットに差し替えます。
                     </li>
                     <li class="mb-2">
-                        <strong>OOBスワップ</strong>: 1つのレスポンスで、リストとページネーション情報を同期更新します。
+                        <strong>無限スクロール</strong>: <span class="badge text-bg-light border">hx-trigger="revealed"</span> でスクロール到達時に次ページを自動取得します。
+                    </li>
+                    <li class="mb-2">
+                        <strong>OOBスワップ</strong>: 1つのレスポンスで、リスト・エラー表示・ページネーション情報を同時更新します。
+                    </li>
+                    <li class="mb-2">
+                        <strong>フォームリセット</strong>: <span class="badge text-bg-light border">hx-on::after-request</span> で送信成功時にフォームを自動クリアします。
                     </li>
                     <li>
                         <strong>CSRF</strong>: baseテンプレートで <span class="badge text-bg-light border">hx-headers</span> を設定し、POST/DELETEも安全に送れます。
