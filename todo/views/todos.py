@@ -21,6 +21,7 @@ from .helpers import (
     parse_page_number,
     render_todo_list_with_pagination_oob,
 )
+from utils.enums import RequestMethod
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +85,7 @@ def create_todo_item(request: HttpRequest) -> HttpResponse:
         作成成功時: 更新されたTodoリストとページネーション情報のHttpResponse。
         バリデーション失敗時: 400 Bad RequestのHttpResponse。
     """
-    if request.method != "POST":
+    if request.method != RequestMethod.POST:
         return HttpResponse(status=HTTPStatus.BAD_REQUEST)
 
     user_id = get_authenticated_user_id(request)
@@ -151,7 +152,7 @@ def update_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     Raises:
         Http404: 指定されたIDのTodoアイテムが存在しない場合。
     """
-    if request.method != "POST":
+    if request.method != RequestMethod.POST:
         return HttpResponse(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
     user_id = get_authenticated_user_id(request)
@@ -187,7 +188,7 @@ def delete_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     Raises:
         Http404: 指定されたIDのTodoアイテムが存在しない場合。
     """
-    if request.method != "DELETE":
+    if request.method != RequestMethod.DELETE:
         return HttpResponse(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
     user_id = get_authenticated_user_id(request)
@@ -219,7 +220,7 @@ def delete_all_todo_items(request: HttpRequest) -> HttpResponse:
         削除成功時: 空のTodoリストとページネーション情報のHttpResponse。
         メソッド不正時: 405 Method Not AllowedのHttpResponse。
     """
-    if request.method != "DELETE":
+    if request.method != RequestMethod.DELETE:
         return HttpResponse(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
     user_id = get_authenticated_user_id(request)
