@@ -12,7 +12,11 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["django-stubs[compatible-mypy]>=5.2.8", "djlint>=1.36.4"]
+dev = [
+    "django-stubs[compatible-mypy]>=5.2.8",
+    "djlint>=1.36.4",
+    "ruff>=0.14.10",
+]
 
 [tool.mypy]
 plugins = ["mypy_django_plugin.main"]
@@ -23,3 +27,20 @@ ignore_missing_imports = true
 
 [tool.django-stubs]
 django_settings_module = "django_todo.settings"
+
+[tool.ruff]
+# Pythonバージョンのターゲット
+target-version = "py312"
+# 長い文字列やdocstring等を許容するため、行長を広げる
+line-length = 120
+# 自動生成されるマイグレーションはLint対象から除外
+extend-exclude = ["todo/migrations"]
+
+[tool.ruff.lint]
+# 主要ルールのみ有効化（必要に応じて調整可能）
+select = ["E", "F", "W"]
+
+[tool.ruff.lint.per-file-ignores]
+# テストコードでは未使用変数(F841)を許容
+"todo/tests/*.py" = ["F841"]
+"todo/tests/**/*.py" = ["F841"]
