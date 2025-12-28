@@ -1,0 +1,30 @@
+<div id="todo-item-{{ todo_item.id }}"
+     class="todo-item {% if todo_item.completed %}todo-item--completed{% endif %}">
+    <label class="todo-item__checkbox">
+        <input type="checkbox"
+               class="form-check-input"
+               {% if todo_item.completed %}checked{% endif %}
+               disabled />
+    </label>
+    <div class="flex-grow-1">
+        <form hx-post="{% url 'todo:edit_todo_item' todo_item.id %}?page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
+              hx-target="#todo-item-{{ todo_item.id }}"
+              hx-swap="outerHTML"
+              class="d-flex align-items-center gap-2">
+            <input type="text"
+                   name="description"
+                   value="{{ draft_description|default:todo_item.description }}"
+                   class="form-control"
+                   maxlength="255"
+                   required
+                   autofocus />
+            <button type="submit" class="btn btn-sm btn-primary">保存</button>
+            <button type="button"
+                    class="btn btn-sm btn-outline-secondary"
+                    hx-get="{% url 'todo:todo_item_partial' todo_item.id %}?page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
+                    hx-target="#todo-item-{{ todo_item.id }}"
+                    hx-swap="outerHTML">キャンセル</button>
+        </form>
+        {% if error_message %}<div class="text-danger small mt-1">{{ error_message }}</div>{% endif %}
+    </div>
+</div>

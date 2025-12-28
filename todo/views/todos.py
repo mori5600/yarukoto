@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 # 定数
 DEFAULT_PAGE: Final[int] = 1
 TODOS_PER_PAGE: Final[int] = 10
+TODO_LIST_ID: Final[str] = "todo-list"
 PAGINATION_INFO_ID: Final[str] = "pagination-info"
 TODO_FORM_ERRORS_ID: Final[str] = "todo-form-errors"
 
@@ -197,6 +198,8 @@ def render_todo_list_with_pagination_oob(
     query: str = "",
     status_filter: TodoFilterStatus = "all",
     sort_key: TodoSortKey = "created",
+    include_main_list: bool = True,
+    include_list_oob: bool = False,
     status: HTTPStatus = HTTPStatus.OK,
 ) -> HttpResponse:
     """TodoリストとページネーションをOOBスワップで返す。
@@ -227,7 +230,9 @@ def render_todo_list_with_pagination_oob(
         "list_querystring": list_querystring,
     }
 
-    todo_list_html = render_to_string("todo/_todo_list.html", base_context)
+    todo_list_html = ""
+    if include_main_list or include_list_oob:
+        todo_list_html = render_to_string("todo/_todo_list.html", base_context)
 
     todo_form_errors_html = render_to_string("todo/_todo_form_errors.html", {"message": form_error_message})
     todo_form_errors_with_oob = todo_form_errors_html.replace(
@@ -241,10 +246,187 @@ def render_todo_list_with_pagination_oob(
         f'id="{PAGINATION_INFO_ID}" hx-swap-oob="true"',
     )
 
-    return HttpResponse(
-        todo_list_html + todo_form_errors_with_oob + pagination_info_with_oob,
-        status=status,
+    parts: list[str] = []
+    if include_main_list:
+        parts.append(todo_list_html)
+    if include_list_oob:
+        parts.append(f'<div id="{TODO_LIST_ID}" hx-swap-oob="innerHTML">{todo_list_html}</div>')
+    parts.append(todo_form_errors_with_oob)
+    parts.append(pagination_info_with_oob)
+
+    return HttpResponse("".join(parts), status=status)
+
+
+@login_required
+def todo_item_partial(request: HttpRequest, item_id: int) -> HttpResponse:
+    """Todoアイテム単体のパーシャルを返す。
+
+    インライン編集のキャンセル等で、Todoアイテムの表示行へ戻す用途。
+
+    Args:
+        request: HTTPリクエストオブジェクト。
+        item_id: 対象のTodoアイテムID。
+
+    Returns:
+        レンダリングされたTodoアイテムHTMLを含むHttpResponse。
+        メソッド不正時: 405 Method Not AllowedのHttpResponse。
+    """
+
+    if request.method != RequestMethod.GET:
+        return HttpResponse(status=HTTPStatus.METHOD_NOT_ALLOWED)
+
+    user_id = get_authenticated_user_id(request)
+    page_number = parse_page_number(request.GET.get("page"), default=DEFAULT_PAGE)
+    query = parse_todo_search_query(request.GET.get("q"))
+    status_filter = parse_todo_filter_status(request.GET.get("status"))
+    sort_key = parse_todo_sort_key(request.GET.get("sort"))
+    list_querystring = build_todo_list_querystring(
+        query=query,
+        status=status_filter,
+        sort_key=sort_key,
     )
+
+    todo_item = get_object_or_404(TodoItem, id=item_id, user_id=user_id)
+    return render(
+        request,
+        "todo/_todo_item.html",
+        {
+            "todo_item": todo_item,
+            "current_page": page_number,
+            "current_q": query,
+            "current_status": status_filter,
+            "current_sort": sort_key,
+            "list_querystring": list_querystring,
+        },
+    )
+
+
+@login_required
+def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
+    """Todoアイテムの説明文をインライン編集する。
+
+    GET: 編集フォーム行（パーシャル）を返す。
+    POST: 説明文を更新し、
+        - 対象行は通常表示へ戻す（メインスワップ）
+        - Todo一覧とページネーション情報はOOBで再描画する（正しさ優先）
+
+    Args:
+        request: HTTPリクエストオブジェクト。
+        item_id: 編集するTodoアイテムのID。
+
+    Returns:
+        GET: 編集フォームのHTMLを含むHttpResponse。
+        POST成功: 対象行 + OOB更新を含むHttpResponse。
+        バリデーション失敗: 編集フォームのHTMLを含む 400 Bad Request。
+        メソッド不正時: 405 Method Not AllowedのHttpResponse。
+    """
+
+    if request.method not in {RequestMethod.GET, RequestMethod.POST}:
+        return HttpResponse(status=HTTPStatus.METHOD_NOT_ALLOWED)
+
+    user_id = get_authenticated_user_id(request)
+    page_number = parse_page_number(request.GET.get("page"), default=DEFAULT_PAGE)
+    query = parse_todo_search_query(request.GET.get("q"))
+    status_filter = parse_todo_filter_status(request.GET.get("status"))
+    sort_key = parse_todo_sort_key(request.GET.get("sort"))
+    list_querystring = build_todo_list_querystring(
+        query=query,
+        status=status_filter,
+        sort_key=sort_key,
+    )
+
+    todo_item = get_object_or_404(TodoItem, id=item_id, user_id=user_id)
+
+    if request.method == RequestMethod.GET:
+        return render(
+            request,
+            "todo/_todo_item_edit.html",
+            {
+                "todo_item": todo_item,
+                "current_page": page_number,
+                "current_q": query,
+                "current_status": status_filter,
+                "current_sort": sort_key,
+                "list_querystring": list_querystring,
+            },
+        )
+
+    raw_description = request.POST.get("description", "")
+    new_description = raw_description.strip()
+    max_length = int(TodoItem._meta.get_field("description").max_length)
+    if not new_description:
+        return render(
+            request,
+            "todo/_todo_item_edit.html",
+            {
+                "todo_item": todo_item,
+                "draft_description": raw_description,
+                "error_message": "Todoを入力してください。",
+                "current_page": page_number,
+                "current_q": query,
+                "current_status": status_filter,
+                "current_sort": sort_key,
+                "list_querystring": list_querystring,
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    if len(new_description) > max_length:
+        return render(
+            request,
+            "todo/_todo_item_edit.html",
+            {
+                "todo_item": todo_item,
+                "draft_description": raw_description,
+                "error_message": f"Todoは最大{max_length}文字までです。",
+                "current_page": page_number,
+                "current_q": query,
+                "current_status": status_filter,
+                "current_sort": sort_key,
+                "list_querystring": list_querystring,
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
+    old_description = todo_item.description
+    if new_description != old_description:
+        todo_item.description = new_description
+        todo_item.save(update_fields=["description", "updated_at"])
+        logger.info(
+            "Todoアイテムを編集しました: user_id=%s, id=%d, description='%s' -> '%s'",
+            getattr(request.user, "id", None),
+            item_id,
+            old_description,
+            new_description,
+        )
+
+    # 正しさ優先: 編集により並び順が変わる可能性があるので、一覧をOOBで再描画する。
+    page_obj = get_paginated_todos(
+        user_id=user_id,
+        page_number=page_number,
+        query=query,
+        status=status_filter,
+        sort_key=sort_key,
+    )
+    oob_response = render_todo_list_with_pagination_oob(
+        page_obj,
+        query=query,
+        status_filter=status_filter,
+        sort_key=sort_key,
+        include_main_list=False,
+        include_list_oob=True,
+    )
+    item_html = render_to_string(
+        "todo/_todo_item.html",
+        {
+            "todo_item": todo_item,
+            "current_page": page_number,
+            "current_q": query,
+            "current_status": status_filter,
+            "current_sort": sort_key,
+            "list_querystring": list_querystring,
+        },
+    )
+    return HttpResponse(item_html + oob_response.content.decode("utf-8"), status=oob_response.status_code)
 
 
 @login_required

@@ -356,3 +356,56 @@ class DeleteAllTodoItemsViewTests(TestCase):
         content = response.content.decode()
         # ページネーション情報が0件を示していることを確認
         self.assertIn("全0件", content)
+
+
+class EditTodoItemViewTests(TestCase):
+    """edit_todo_item / todo_item_partial のテストケース。"""
+
+    def setUp(self):
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(username="user", password="pass")
+        self.other_user = user_model.objects.create_user(username="other", password="pass")
+        self.client.force_login(self.user)
+        self.todo: TodoItem = TodoItem.objects.create(user=self.user, description="編集前")
+
+    def test_get_edit_renders_edit_partial(self):
+        response = self.client.get(
+            reverse("todo:edit_todo_item", args=[self.todo.pk]),
+            {"page": "1", "sort": "created"},
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, "todo/_todo_item_edit.html")
+        content = response.content.decode()
+        self.assertIn('name="description"', content)
+        self.assertIn('value="編集前"', content)
+
+    def test_post_edit_updates_description_and_returns_list_oob(self):
+        url = reverse("todo:edit_todo_item", args=[self.todo.pk]) + "?page=1&sort=updated"
+        response = self.client.post(url, {"description": "編集後"})
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        self.todo.refresh_from_db()
+        self.assertEqual(self.todo.description, "編集後")
+
+        content = response.content.decode()
+        self.assertIn('id="todo-list"', content)
+        self.assertIn('hx-swap-oob="innerHTML"', content)
+
+    def test_post_edit_rejected_when_empty(self):
+        url = reverse("todo:edit_todo_item", args=[self.todo.pk]) + "?page=1"
+        response = self.client.post(url, {"description": ""})
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertTemplateUsed(response, "todo/_todo_item_edit.html")
+
+    def test_cancel_uses_item_partial(self):
+        response = self.client.get(
+            reverse("todo:todo_item_partial", args=[self.todo.pk]),
+            {"page": "1"},
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, "todo/_todo_item.html")
+
+    def test_other_users_item_is_not_accessible(self):
+        other_todo = TodoItem.objects.create(user=self.other_user, description="他人")
+        response = self.client.get(reverse("todo:edit_todo_item", args=[other_todo.pk]))
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
