@@ -1,6 +1,27 @@
 <div id="pagination-info" class="todo-info">
     <span class="todo-info__count">全{{ page_obj.paginator.count }}件</span>
     <div class="todo-info__actions">
+        <form class="m-0" aria-label="並び替え">
+            {% if current_q %}<input type="hidden" name="q" value="{{ current_q }}" />{% endif %}
+            {% if current_status and current_status != 'all' %}
+                <input type="hidden" name="status" value="{{ current_status }}" />
+            {% endif %}
+            <select name="sort"
+                    class="form-select form-select-sm"
+                    hx-get="{% url 'todo:todo_list' %}"
+                    hx-trigger="change"
+                    hx-target="body"
+                    hx-push-url="true"
+                    hx-include="closest form"
+                    aria-label="並び替え">
+                <option value="created"
+                        {% if current_sort|default:'created' == 'created' %}selected{% endif %}>作成日時（新しい順）</option>
+                <option value="updated"
+                        {% if current_sort|default:'created' == 'updated' %}selected{% endif %}>更新日時（新しい順）</option>
+                <option value="active_first"
+                        {% if current_sort|default:'created' == 'active_first' %}selected{% endif %}>未完了を上へ</option>
+            </select>
+        </form>
         {% if page_obj.paginator.count > 0 %}
             <button class="btn btn-sm btn-outline-danger"
                     hx-delete="{% url 'todo:delete_all_todo_items' %}{% if list_querystring %}?{{ list_querystring }}{% endif %}"

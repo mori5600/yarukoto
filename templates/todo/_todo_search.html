@@ -16,19 +16,9 @@
             </select>
         </div>
         <div class="col-6 col-md-auto">
-            <select name="sort" class="form-select">
-                <option value="created"
-                        {% if current_sort|default:'created' == 'created' %}selected{% endif %}>作成日時（新しい順）</option>
-                <option value="updated"
-                        {% if current_sort|default:'created' == 'updated' %}selected{% endif %}>更新日時（新しい順）</option>
-                <option value="active_first"
-                        {% if current_sort|default:'created' == 'active_first' %}selected{% endif %}>未完了を上へ</option>
-            </select>
-        </div>
-        <div class="col-6 col-md-auto">
             <button type="submit" class="btn btn-outline-secondary w-100">絞り込み</button>
         </div>
-        {% if current_q or current_status != 'all' or current_sort|default:'created' != 'created' %}
+        {% if current_q or current_status != 'all' %}
             <div class="col-6 col-md-auto">
                 <a href="{% url 'todo:todo_list' %}"
                    class="btn btn-outline-secondary w-100">クリア</a>
