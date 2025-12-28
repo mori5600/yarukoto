@@ -80,6 +80,19 @@
   transform: scale(0.95);
 }
 
+.todo-item__edit-form {
+  width: 100%;
+}
+
+.todo-item__edit-form .form-control {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.todo-item__edit-form .btn {
+  white-space: nowrap;
+}
+
 /* 空の状態 */
 .todo-empty {
   text-align: center;
@@ -204,6 +217,18 @@
 }
 
 @media (max-width: 576px) {
+  .todo-item__edit-form {
+    flex-wrap: wrap;
+  }
+
+  .todo-item__edit-form .form-control {
+    flex-basis: 100%;
+  }
+
+  .todo-item__edit-form .btn {
+    flex: 1 1 0;
+  }
+
   .todo-form__inner {
     flex-direction: column;
     align-items: stretch;
