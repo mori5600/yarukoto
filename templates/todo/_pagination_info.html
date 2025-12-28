@@ -1,5 +1,4 @@
 <div id="pagination-info" class="todo-info">
-    <span class="todo-info__count">全{{ page_obj.paginator.count }}件</span>
     <div class="todo-info__actions d-none d-sm-flex">
         <form class="m-0" aria-label="並び替え">
             {% if current_q %}<input type="hidden" name="q" value="{{ current_q }}" />{% endif %}

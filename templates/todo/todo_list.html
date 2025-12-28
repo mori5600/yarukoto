@@ -3,8 +3,9 @@
     <div class="todo-container">
         <div class="sticky-header">
             {% include "todo/_todo_form.html" %}
-            {% include "todo/_todo_search.html" %}
             {% include "todo/_todo_form_errors.html" %}
+            {% include "todo/_todo_count.html" %}
+            {% include "todo/_todo_search.html" %}
             {% include "todo/_pagination_info.html" %}
         </div>
         <div id="todo-list" class="todo-list">{% include "todo/_todo_list.html" %}</div>

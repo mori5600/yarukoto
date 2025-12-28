@@ -30,6 +30,7 @@ TODOS_PER_PAGE: Final[int] = 10
 DESCRIPTION_MAX_LENGTH: Final[int] = 255
 TODO_LIST_ID: Final[str] = "todo-list"
 PAGINATION_INFO_ID: Final[str] = "pagination-info"
+TODO_COUNT_ID: Final[str] = "todo-count"
 TODO_FORM_ERRORS_ID: Final[str] = "todo-form-errors"
 
 
@@ -247,12 +248,19 @@ def render_todo_list_with_pagination_oob(
         f'id="{PAGINATION_INFO_ID}" hx-swap-oob="true"',
     )
 
+    todo_count_html = render_to_string("todo/_todo_count.html", base_context)
+    todo_count_with_oob = todo_count_html.replace(
+        f'id="{TODO_COUNT_ID}"',
+        f'id="{TODO_COUNT_ID}" hx-swap-oob="true"',
+    )
+
     parts: list[str] = []
     if include_main_list:
         parts.append(todo_list_html)
     if include_list_oob:
         parts.append(f'<div id="{TODO_LIST_ID}" hx-swap-oob="innerHTML">{todo_list_html}</div>')
     parts.append(todo_form_errors_with_oob)
+    parts.append(todo_count_with_oob)
     parts.append(pagination_info_with_oob)
 
     return HttpResponse("".join(parts), status=status)
