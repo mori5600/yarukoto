@@ -33,6 +33,27 @@ TODO_FORM_ERRORS_ID: Final[str] = "todo-form-errors"
 
 type TodoFilterStatus = Literal["all", "active", "completed"]
 
+type TodoSortKey = Literal["created", "updated", "active_first"]
+
+
+def parse_todo_sort_key(raw_sort: str | None) -> TodoSortKey:
+    """Todo一覧の並び替えキーを正規化する。
+
+    Args:
+        raw_sort: クエリパラメータ等で受け取った並び替えキー。
+
+    Returns:
+        正規化された並び替えキー。未指定・不正値は "created"。
+    """
+
+    if raw_sort is None:
+        return "created"
+
+    sort_key = raw_sort.strip().lower()
+    if sort_key in {"created", "updated", "active_first"}:
+        return sort_key  # type: ignore[return-value]
+    return "created"
+
 
 def parse_todo_filter_status(raw_status: str | None) -> TodoFilterStatus:
     """Todoのフィルタ状態を正規化する。
@@ -68,8 +89,13 @@ def parse_todo_search_query(raw_query: str | None) -> str:
     return raw_query.strip()
 
 
-def build_todo_filter_querystring(*, query: str, status: TodoFilterStatus) -> str:
-    """検索/フィルタ用のクエリ文字列を生成する。
+def build_todo_list_querystring(
+    *,
+    query: str,
+    status: TodoFilterStatus,
+    sort_key: TodoSortKey,
+) -> str:
+    """Todo一覧（検索/フィルタ/並び替え）用のクエリ文字列を生成する。
 
     Note:
         page は別途テンプレート側で付与する想定。
@@ -79,7 +105,8 @@ def build_todo_filter_querystring(*, query: str, status: TodoFilterStatus) -> st
         status: フィルタ状態。
 
     Returns:
-        URLエンコード済みのクエリ文字列。デフォルト状態（query="" かつ status="all"）は空文字。
+        URLエンコード済みのクエリ文字列。
+        デフォルト状態（query="" かつ status="all" かつ sort_key="created"）は空文字。
     """
 
     params: dict[str, str] = {}
@@ -88,6 +115,8 @@ def build_todo_filter_querystring(*, query: str, status: TodoFilterStatus) -> st
         params["q"] = query
     if status != "all":
         params["status"] = status
+    if sort_key != "created":
+        params["sort"] = sort_key
 
     if not params:
         return ""
@@ -125,6 +154,7 @@ def get_paginated_todos(
     per_page=TODOS_PER_PAGE,
     query: str = "",
     status: TodoFilterStatus = "all",
+    sort_key: TodoSortKey = "created",
 ):
     """ページネーション済みのTodoリストを取得する。
 
@@ -150,7 +180,12 @@ def get_paginated_todos(
     if query:
         todo_items_list = todo_items_list.filter(description__icontains=query)
 
-    todo_items_list = todo_items_list.order_by("-created_at")
+    if sort_key == "updated":
+        todo_items_list = todo_items_list.order_by("-updated_at", "-created_at")
+    elif sort_key == "active_first":
+        todo_items_list = todo_items_list.order_by("completed", "-created_at")
+    else:
+        todo_items_list = todo_items_list.order_by("-created_at")
     paginator = Paginator(todo_items_list, per_page)
     return paginator.get_page(page_number)
 
@@ -161,6 +196,7 @@ def render_todo_list_with_pagination_oob(
     form_error_message: str | None = None,
     query: str = "",
     status_filter: TodoFilterStatus = "all",
+    sort_key: TodoSortKey = "created",
     status: HTTPStatus = HTTPStatus.OK,
 ) -> HttpResponse:
     """TodoリストとページネーションをOOBスワップで返す。
@@ -177,13 +213,18 @@ def render_todo_list_with_pagination_oob(
         レンダリングされたHTMLを含むHttpResponse。
     """
 
-    filter_querystring = build_todo_filter_querystring(query=query, status=status_filter)
+    list_querystring = build_todo_list_querystring(
+        query=query,
+        status=status_filter,
+        sort_key=sort_key,
+    )
     base_context: dict[str, object] = {
         "page_obj": page_obj,
         "current_page": getattr(page_obj, "number", DEFAULT_PAGE),
         "current_q": query,
         "current_status": status_filter,
-        "filter_querystring": filter_querystring,
+        "current_sort": sort_key,
+        "list_querystring": list_querystring,
     }
 
     todo_list_html = render_to_string("todo/_todo_list.html", base_context)
@@ -222,15 +263,21 @@ def todo_list(request: HttpRequest) -> HttpResponse:
     page_number = parse_page_number(request.GET.get("page"), default=DEFAULT_PAGE)
     query = parse_todo_search_query(request.GET.get("q"))
     status_filter = parse_todo_filter_status(request.GET.get("status"))
+    sort_key = parse_todo_sort_key(request.GET.get("sort"))
     page_obj = get_paginated_todos(
         user_id=user_id,
         page_number=page_number,
         query=query,
         status=status_filter,
+        sort_key=sort_key,
     )
     form = TodoItemForm()
 
-    filter_querystring = build_todo_filter_querystring(query=query, status=status_filter)
+    list_querystring = build_todo_list_querystring(
+        query=query,
+        status=status_filter,
+        sort_key=sort_key,
+    )
 
     return render(
         request,
@@ -241,7 +288,8 @@ def todo_list(request: HttpRequest) -> HttpResponse:
             "current_page": page_obj.number,
             "current_q": query,
             "current_status": status_filter,
-            "filter_querystring": filter_querystring,
+            "current_sort": sort_key,
+            "list_querystring": list_querystring,
         },
     )
 
@@ -262,13 +310,20 @@ def todo_items(request: HttpRequest) -> HttpResponse:
     page_number = parse_page_number(request.GET.get("page"), default=DEFAULT_PAGE)
     query = parse_todo_search_query(request.GET.get("q"))
     status_filter = parse_todo_filter_status(request.GET.get("status"))
+    sort_key = parse_todo_sort_key(request.GET.get("sort"))
     page_obj = get_paginated_todos(
         user_id=user_id,
         page_number=page_number,
         query=query,
         status=status_filter,
+        sort_key=sort_key,
     )
-    filter_querystring = build_todo_filter_querystring(query=query, status=status_filter)
+
+    list_querystring = build_todo_list_querystring(
+        query=query,
+        status=status_filter,
+        sort_key=sort_key,
+    )
     return render(
         request,
         "todo/_todo_list.html",
@@ -277,7 +332,8 @@ def todo_items(request: HttpRequest) -> HttpResponse:
             "current_page": page_obj.number,
             "current_q": query,
             "current_status": status_filter,
-            "filter_querystring": filter_querystring,
+            "current_sort": sort_key,
+            "list_querystring": list_querystring,
         },
     )
 
@@ -302,6 +358,7 @@ def create_todo_item(request: HttpRequest) -> HttpResponse:
     user_id = get_authenticated_user_id(request)
     query = parse_todo_search_query(request.GET.get("q"))
     status_filter = parse_todo_filter_status(request.GET.get("status"))
+    sort_key = parse_todo_sort_key(request.GET.get("sort"))
     max_items = getattr(settings, "TODO_MAX_ITEMS_PER_USER", 1000)
     current_count = TodoItem.objects.filter(user_id=user_id).count()
     if current_count >= max_items:
@@ -316,12 +373,14 @@ def create_todo_item(request: HttpRequest) -> HttpResponse:
             page_number=DEFAULT_PAGE,
             query=query,
             status=status_filter,
+            sort_key=sort_key,
         )
         return render_todo_list_with_pagination_oob(
             page_obj,
             form_error_message=(f"Todoは1ユーザーあたり最大{max_items}件までです。不要なTodoを削除してください。"),
             query=query,
             status_filter=status_filter,
+            sort_key=sort_key,
             status=HTTPStatus.CONFLICT,
         )
 
@@ -341,11 +400,13 @@ def create_todo_item(request: HttpRequest) -> HttpResponse:
             page_number=DEFAULT_PAGE,
             query=query,
             status=status_filter,
+            sort_key=sort_key,
         )
         return render_todo_list_with_pagination_oob(
             page_obj,
             query=query,
             status_filter=status_filter,
+            sort_key=sort_key,
         )
 
     logger.warning("Todoアイテムの作成に失敗しました: errors=%s", form.errors.as_json())
@@ -354,6 +415,7 @@ def create_todo_item(request: HttpRequest) -> HttpResponse:
         page_number=DEFAULT_PAGE,
         query=query,
         status=status_filter,
+        sort_key=sort_key,
     )
     message = "Todoを入力してください。" if "description" in form.errors else "入力内容を確認してください。"
     return render_todo_list_with_pagination_oob(
@@ -361,6 +423,7 @@ def create_todo_item(request: HttpRequest) -> HttpResponse:
         form_error_message=message,
         query=query,
         status_filter=status_filter,
+        sort_key=sort_key,
         status=HTTPStatus.BAD_REQUEST,
     )
 
@@ -389,7 +452,12 @@ def update_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     page_number = parse_page_number(request.GET.get("page"), default=DEFAULT_PAGE)
     query = parse_todo_search_query(request.GET.get("q"))
     status_filter = parse_todo_filter_status(request.GET.get("status"))
-    filter_querystring = build_todo_filter_querystring(query=query, status=status_filter)
+    sort_key = parse_todo_sort_key(request.GET.get("sort"))
+    list_querystring = build_todo_list_querystring(
+        query=query,
+        status=status_filter,
+        sort_key=sort_key,
+    )
 
     todo_item = get_object_or_404(TodoItem, id=item_id, user_id=user_id)
     old_status = todo_item.completed
@@ -410,7 +478,8 @@ def update_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
             "current_page": page_number,
             "current_q": query,
             "current_status": status_filter,
-            "filter_querystring": filter_querystring,
+            "current_sort": sort_key,
+            "list_querystring": list_querystring,
         },
     )
 
@@ -441,6 +510,7 @@ def delete_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     page_number = parse_page_number(request.GET.get("page"), default=DEFAULT_PAGE)
     query = parse_todo_search_query(request.GET.get("q"))
     status_filter = parse_todo_filter_status(request.GET.get("status"))
+    sort_key = parse_todo_sort_key(request.GET.get("sort"))
     description = todo_item.description
     todo_item.delete()
     logger.info(
@@ -454,11 +524,13 @@ def delete_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         page_number=page_number,
         query=query,
         status=status_filter,
+        sort_key=sort_key,
     )
     return render_todo_list_with_pagination_oob(
         page_obj,
         query=query,
         status_filter=status_filter,
+        sort_key=sort_key,
     )
 
 
@@ -482,6 +554,7 @@ def delete_all_todo_items(request: HttpRequest) -> HttpResponse:
     user_id = get_authenticated_user_id(request)
     query = parse_todo_search_query(request.GET.get("q"))
     status_filter = parse_todo_filter_status(request.GET.get("status"))
+    sort_key = parse_todo_sort_key(request.GET.get("sort"))
     queryset = TodoItem.objects.filter(user_id=user_id)
     count = queryset.count()
     queryset.delete()
@@ -495,9 +568,11 @@ def delete_all_todo_items(request: HttpRequest) -> HttpResponse:
         page_number=DEFAULT_PAGE,
         query=query,
         status=status_filter,
+        sort_key=sort_key,
     )
     return render_todo_list_with_pagination_oob(
         page_obj,
         query=query,
         status_filter=status_filter,
+        sort_key=sort_key,
     )

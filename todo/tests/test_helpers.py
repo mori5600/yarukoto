@@ -1,9 +1,11 @@
 """ヘルパー関数のテスト。"""
 
+from datetime import timedelta
 from urllib.parse import urlencode
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.utils import timezone
 
 from ..models import TodoItem
 from ..views import get_paginated_todos
@@ -81,6 +83,29 @@ class GetPaginatedTodosTests(TestCase):
         page_obj = get_paginated_todos(user_id=self.user.id, query="りんご")
         self.assertEqual(page_obj.paginator.count, 1)
         self.assertEqual(page_obj[0].description, "買い物: りんご")
+
+    def test_sort_updated_orders_by_updated_at_desc(self):
+        """updated 指定時に updated_at の降順で並ぶことを確認する。"""
+        assert self.user.id is not None
+
+        target = TodoItem.objects.filter(user=self.user).order_by("id").first()
+        assert target is not None
+
+        TodoItem.objects.filter(id=target.id).update(updated_at=timezone.now() + timedelta(days=1))
+
+        page_obj = get_paginated_todos(user_id=self.user.id, sort_key="updated")
+        self.assertEqual(page_obj[0].id, target.id)
+
+    def test_sort_active_first_orders_active_before_completed(self):
+        """active_first 指定時に未完了が先頭へ来ることを確認する。"""
+        assert self.user.id is not None
+
+        newest = TodoItem.objects.filter(user=self.user).order_by("-created_at").first()
+        assert newest is not None
+        TodoItem.objects.filter(id=newest.id).update(completed=True)
+
+        page_obj = get_paginated_todos(user_id=self.user.id, sort_key="active_first")
+        self.assertFalse(page_obj[0].completed)
 
 
 class QuerystringEncodingTests(TestCase):

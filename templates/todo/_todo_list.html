@@ -8,7 +8,7 @@
 {% endfor %}
 {% if page_obj.has_next %}
     <div id="infinite-scroll-trigger"
-         hx-get="{% url 'todo:todo_items' %}?page={{ page_obj.next_page_number }}{% if filter_querystring %}&{{ filter_querystring }}{% endif %}"
+         hx-get="{% url 'todo:todo_items' %}?page={{ page_obj.next_page_number }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
          hx-trigger="revealed"
          hx-swap="outerHTML"
          class="todo-loading">
