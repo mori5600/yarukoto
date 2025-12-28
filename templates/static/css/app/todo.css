@@ -67,10 +67,6 @@
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
-  opacity: 0;
-}
-
-.todo-item:hover .todo-item__delete {
   opacity: 1;
 }
 
