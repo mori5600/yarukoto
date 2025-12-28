@@ -20,7 +20,10 @@ class IntegrationTests(TestCase):
     def test_full_todo_lifecycle(self):
         """Todo作成から削除までの完全なライフサイクルを確認する。"""
         # 作成
-        response = self.client.post(reverse("todo:create_todo_item"), {"description": "ライフサイクルテスト"})
+        response = self.client.post(
+            reverse("todo:create_todo_item"),
+            {"description": "ライフサイクルテスト"},
+        )
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(TodoItem.objects.count(), 1)
 

@@ -286,7 +286,10 @@ LOGGING: dict[str, object] = {
 # ===========================================
 if not DEBUG:
     # HTTPS設定
-    SECURE_PROXY_SSL_HEADER: tuple[str, str] = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_PROXY_SSL_HEADER: tuple[str, str] = (
+        "HTTP_X_FORWARDED_PROTO",
+        "https",
+    )
     SECURE_SSL_REDIRECT: bool = os.getenv("DJANGO_SECURE_SSL_REDIRECT", "0") == "1"
 
     # セッション・クッキー設定

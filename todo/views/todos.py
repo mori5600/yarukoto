@@ -437,7 +437,10 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
             "list_querystring": list_querystring,
         },
     )
-    return HttpResponse(item_html + oob_response.content.decode("utf-8"), status=oob_response.status_code)
+    return HttpResponse(
+        item_html + oob_response.content.decode("utf-8"),
+        status=oob_response.status_code,
+    )
 
 
 @login_required

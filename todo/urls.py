@@ -20,10 +20,26 @@ urlpatterns = [
     path("", views.todo_list, name="todo_list"),
     path("items/", views.todo_items, name="todo_items"),
     path("create/", views.create_todo_item, name="create_todo_item"),
-    path("update/<int:item_id>/", views.update_todo_item, name="update_todo_item"),
-    path("item/<int:item_id>/", views.todo_item_partial, name="todo_item_partial"),
+    path(
+        "update/<int:item_id>/",
+        views.update_todo_item,
+        name="update_todo_item",
+    ),
+    path(
+        "item/<int:item_id>/",
+        views.todo_item_partial,
+        name="todo_item_partial",
+    ),
     path("edit/<int:item_id>/", views.edit_todo_item, name="edit_todo_item"),
-    path("delete/<int:item_id>/", views.delete_todo_item, name="delete_todo_item"),
-    path("delete-all/", views.delete_all_todo_items, name="delete_all_todo_items"),
+    path(
+        "delete/<int:item_id>/",
+        views.delete_todo_item,
+        name="delete_todo_item",
+    ),
+    path(
+        "delete-all/",
+        views.delete_all_todo_items,
+        name="delete_all_todo_items",
+    ),
     path("docs/", views.docs, name="docs"),
 ]
