@@ -20,9 +20,7 @@ class IntegrationTests(TestCase):
     def test_full_todo_lifecycle(self):
         """Todo作成から削除までの完全なライフサイクルを確認する。"""
         # 作成
-        response = self.client.post(
-            reverse("todo:create_todo_item"), {"description": "ライフサイクルテスト"}
-        )
+        response = self.client.post(reverse("todo:create_todo_item"), {"description": "ライフサイクルテスト"})
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(TodoItem.objects.count(), 1)
 
@@ -53,9 +51,7 @@ class IntegrationTests(TestCase):
         self.assertEqual(len(response.context["page_obj"]), 10)
 
         # 新しいアイテムを追加
-        self.client.post(
-            reverse("todo:create_todo_item"), {"description": "新規タスク"}
-        )
+        self.client.post(reverse("todo:create_todo_item"), {"description": "新規タスク"})
 
         # 合計16個になり、2ページ必要
         response = self.client.get(reverse("todo:todo_list"))
@@ -80,9 +76,7 @@ class IntegrationTests(TestCase):
         """完了・未完了が混在する状態での全削除を確認する。"""
         # アイテムを作成
         todo1 = TodoItem.objects.create(user=self.user, description="未完了タスク1")
-        todo2 = TodoItem.objects.create(
-            user=self.user, description="完了タスク", completed=True
-        )
+        todo2 = TodoItem.objects.create(user=self.user, description="完了タスク", completed=True)
         todo3 = TodoItem.objects.create(user=self.user, description="未完了タスク2")
         self.assertEqual(TodoItem.objects.count(), 3)
 
@@ -102,9 +96,7 @@ class IntegrationTests(TestCase):
         self.assertEqual(TodoItem.objects.count(), 0)
 
         # 新規作成
-        response = self.client.post(
-            reverse("todo:create_todo_item"), {"description": "新しいタスク"}
-        )
+        response = self.client.post(reverse("todo:create_todo_item"), {"description": "新しいタスク"})
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(TodoItem.objects.count(), 1)
 

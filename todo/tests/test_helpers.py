@@ -58,11 +58,7 @@ class GetPaginatedTodosTests(TestCase):
     def test_filter_active(self):
         """未完了のみのフィルタが正しく動作することを確認する。"""
         assert self.user.id is not None
-        ids = list(
-            TodoItem.objects.filter(user=self.user)
-            .order_by("id")
-            .values_list("id", flat=True)[:5]
-        )
+        ids = list(TodoItem.objects.filter(user=self.user).order_by("id").values_list("id", flat=True)[:5])
         TodoItem.objects.filter(id__in=ids).update(completed=True)
         page_obj = get_paginated_todos(user_id=self.user.id, status="active")
         self.assertEqual(page_obj.paginator.count, 20)
@@ -71,11 +67,7 @@ class GetPaginatedTodosTests(TestCase):
     def test_filter_completed(self):
         """完了のみのフィルタが正しく動作することを確認する。"""
         assert self.user.id is not None
-        ids = list(
-            TodoItem.objects.filter(user=self.user)
-            .order_by("id")
-            .values_list("id", flat=True)[:5]
-        )
+        ids = list(TodoItem.objects.filter(user=self.user).order_by("id").values_list("id", flat=True)[:5])
         TodoItem.objects.filter(id__in=ids).update(completed=True)
         page_obj = get_paginated_todos(user_id=self.user.id, status="completed")
         self.assertEqual(page_obj.paginator.count, 5)

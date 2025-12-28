@@ -94,9 +94,7 @@ def build_todo_filter_querystring(*, query: str, status: TodoFilterStatus) -> st
     return urlencode(params)
 
 
-def parse_page_number(
-    raw_page_number: str | int | None, *, default: int = DEFAULT_PAGE
-) -> int:
+def parse_page_number(raw_page_number: str | int | None, *, default: int = DEFAULT_PAGE) -> int:
     """ページ番号を安全にintへ正規化する。
 
     Args:
@@ -179,9 +177,7 @@ def render_todo_list_with_pagination_oob(
         レンダリングされたHTMLを含むHttpResponse。
     """
 
-    filter_querystring = build_todo_filter_querystring(
-        query=query, status=status_filter
-    )
+    filter_querystring = build_todo_filter_querystring(query=query, status=status_filter)
     base_context: dict[str, object] = {
         "page_obj": page_obj,
         "current_page": getattr(page_obj, "number", DEFAULT_PAGE),
@@ -192,9 +188,7 @@ def render_todo_list_with_pagination_oob(
 
     todo_list_html = render_to_string("todo/_todo_list.html", base_context)
 
-    todo_form_errors_html = render_to_string(
-        "todo/_todo_form_errors.html", {"message": form_error_message}
-    )
+    todo_form_errors_html = render_to_string("todo/_todo_form_errors.html", {"message": form_error_message})
     todo_form_errors_with_oob = todo_form_errors_html.replace(
         f'id="{TODO_FORM_ERRORS_ID}"',
         f'id="{TODO_FORM_ERRORS_ID}" hx-swap-oob="true"',
@@ -236,9 +230,7 @@ def todo_list(request: HttpRequest) -> HttpResponse:
     )
     form = TodoItemForm()
 
-    filter_querystring = build_todo_filter_querystring(
-        query=query, status=status_filter
-    )
+    filter_querystring = build_todo_filter_querystring(query=query, status=status_filter)
 
     return render(
         request,
@@ -276,9 +268,7 @@ def todo_items(request: HttpRequest) -> HttpResponse:
         query=query,
         status=status_filter,
     )
-    filter_querystring = build_todo_filter_querystring(
-        query=query, status=status_filter
-    )
+    filter_querystring = build_todo_filter_querystring(query=query, status=status_filter)
     return render(
         request,
         "todo/_todo_list.html",
@@ -329,9 +319,7 @@ def create_todo_item(request: HttpRequest) -> HttpResponse:
         )
         return render_todo_list_with_pagination_oob(
             page_obj,
-            form_error_message=(
-                f"Todoは1ユーザーあたり最大{max_items}件までです。不要なTodoを削除してください。"
-            ),
+            form_error_message=(f"Todoは1ユーザーあたり最大{max_items}件までです。不要なTodoを削除してください。"),
             query=query,
             status_filter=status_filter,
             status=HTTPStatus.CONFLICT,
@@ -367,11 +355,7 @@ def create_todo_item(request: HttpRequest) -> HttpResponse:
         query=query,
         status=status_filter,
     )
-    message = (
-        "Todoを入力してください。"
-        if "description" in form.errors
-        else "入力内容を確認してください。"
-    )
+    message = "Todoを入力してください。" if "description" in form.errors else "入力内容を確認してください。"
     return render_todo_list_with_pagination_oob(
         page_obj,
         form_error_message=message,
@@ -405,9 +389,7 @@ def update_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     page_number = parse_page_number(request.GET.get("page"), default=DEFAULT_PAGE)
     query = parse_todo_search_query(request.GET.get("q"))
     status_filter = parse_todo_filter_status(request.GET.get("status"))
-    filter_querystring = build_todo_filter_querystring(
-        query=query, status=status_filter
-    )
+    filter_querystring = build_todo_filter_querystring(query=query, status=status_filter)
 
     todo_item = get_object_or_404(TodoItem, id=item_id, user_id=user_id)
     old_status = todo_item.completed

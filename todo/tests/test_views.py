@@ -99,9 +99,7 @@ class TodoItemsViewTests(TestCase):
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
-        expected_filter = urlencode({"q": "タスク", "status": "active"}).replace(
-            "&", "&amp;"
-        )
+        expected_filter = urlencode({"q": "タスク", "status": "active"}).replace("&", "&amp;")
         content = response.content.decode()
         self.assertIn(f"?page=2&{expected_filter}", content)
 
@@ -135,9 +133,7 @@ class CreateTodoItemViewTests(TestCase):
 
     def test_create_with_valid_data(self):
         """有効なデータでTodoアイテムが作成されることを確認する。"""
-        response = self.client.post(
-            reverse("todo:create_todo_item"), {"description": "新しいタスク"}
-        )
+        response = self.client.post(reverse("todo:create_todo_item"), {"description": "新しいタスク"})
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(TodoItem.objects.count(), 1)
 
@@ -147,9 +143,7 @@ class CreateTodoItemViewTests(TestCase):
 
     def test_create_with_invalid_data(self):
         """無効なデータでBad Requestが返されることを確認する。"""
-        response = self.client.post(
-            reverse("todo:create_todo_item"), {"description": ""}
-        )
+        response = self.client.post(reverse("todo:create_todo_item"), {"description": ""})
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertEqual(TodoItem.objects.count(), 0)
 
@@ -160,24 +154,18 @@ class CreateTodoItemViewTests(TestCase):
 
     def test_response_contains_pagination_oob(self):
         """レスポンスにOOBスワップ属性が含まれることを確認する。"""
-        response = self.client.post(
-            reverse("todo:create_todo_item"), {"description": "新しいタスク"}
-        )
+        response = self.client.post(reverse("todo:create_todo_item"), {"description": "新しいタスク"})
         content = response.content.decode()
         self.assertIn('hx-swap-oob="true"', content)
 
     @override_settings(TODO_MAX_ITEMS_PER_USER=1)
     def test_create_is_rejected_when_limit_reached(self):
         """上限到達時にTodo作成が拒否されることを確認する。"""
-        response = self.client.post(
-            reverse("todo:create_todo_item"), {"description": "1件目"}
-        )
+        response = self.client.post(reverse("todo:create_todo_item"), {"description": "1件目"})
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(TodoItem.objects.filter(user=self.user).count(), 1)
 
-        response = self.client.post(
-            reverse("todo:create_todo_item"), {"description": "2件目"}
-        )
+        response = self.client.post(reverse("todo:create_todo_item"), {"description": "2件目"})
         self.assertEqual(response.status_code, HTTPStatus.CONFLICT)
         self.assertEqual(TodoItem.objects.filter(user=self.user).count(), 1)
 
@@ -192,21 +180,15 @@ class UpdateTodoItemViewTests(TestCase):
         """テスト用のTodoアイテムを作成する。"""
         user_model = get_user_model()
         self.user = user_model.objects.create_user(username="user", password="pass")
-        self.other_user = user_model.objects.create_user(
-            username="other", password="pass"
-        )
+        self.other_user = user_model.objects.create_user(username="other", password="pass")
         self.client.force_login(self.user)
-        self.todo: TodoItem = TodoItem.objects.create(
-            user=self.user, description="テストタスク"
-        )
+        self.todo: TodoItem = TodoItem.objects.create(user=self.user, description="テストタスク")
 
     def test_update_toggles_completed(self):
         """完了状態が正しく切り替わることを確認する。"""
         self.assertFalse(self.todo.completed)
 
-        response = self.client.post(
-            reverse("todo:update_todo_item", args=[self.todo.pk])
-        )
+        response = self.client.post(reverse("todo:update_todo_item", args=[self.todo.pk]))
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         self.todo.refresh_from_db()
@@ -219,26 +201,18 @@ class UpdateTodoItemViewTests(TestCase):
 
     def test_update_cannot_touch_other_users_item(self):
         """他ユーザーのTodoは更新できないことを確認する。"""
-        other_todo = TodoItem.objects.create(
-            user=self.other_user, description="他人のタスク"
-        )
-        response = self.client.post(
-            reverse("todo:update_todo_item", args=[other_todo.pk])
-        )
+        other_todo = TodoItem.objects.create(user=self.other_user, description="他人のタスク")
+        response = self.client.post(reverse("todo:update_todo_item", args=[other_todo.pk]))
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_update_with_get_method(self):
         """GETメソッドでMethod Not Allowedが返されることを確認する。"""
-        response = self.client.get(
-            reverse("todo:update_todo_item", args=[self.todo.pk])
-        )
+        response = self.client.get(reverse("todo:update_todo_item", args=[self.todo.pk]))
         self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_response_uses_item_template(self):
         """レスポンスが_todo_item.htmlテンプレートを使用することを確認する。"""
-        response = self.client.post(
-            reverse("todo:update_todo_item", args=[self.todo.pk])
-        )
+        response = self.client.post(reverse("todo:update_todo_item", args=[self.todo.pk]))
         self.assertTemplateUsed(response, "todo/_todo_item.html")
 
 
@@ -249,21 +223,15 @@ class DeleteTodoItemViewTests(TestCase):
         """テスト用のTodoアイテムを作成する。"""
         user_model = get_user_model()
         self.user = user_model.objects.create_user(username="user", password="pass")
-        self.other_user = user_model.objects.create_user(
-            username="other", password="pass"
-        )
+        self.other_user = user_model.objects.create_user(username="other", password="pass")
         self.client.force_login(self.user)
-        self.todo: TodoItem = TodoItem.objects.create(
-            user=self.user, description="削除テスト"
-        )
+        self.todo: TodoItem = TodoItem.objects.create(user=self.user, description="削除テスト")
 
     def test_delete_removes_item(self):
         """Todoアイテムが正しく削除されることを確認する。"""
         self.assertEqual(TodoItem.objects.count(), 1)
 
-        response = self.client.delete(
-            reverse("todo:delete_todo_item", args=[self.todo.pk])
-        )
+        response = self.client.delete(reverse("todo:delete_todo_item", args=[self.todo.pk]))
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(TodoItem.objects.count(), 0)
 
@@ -274,16 +242,12 @@ class DeleteTodoItemViewTests(TestCase):
 
     def test_delete_with_post_method(self):
         """POSTメソッドでMethod Not Allowedが返されることを確認する。"""
-        response = self.client.post(
-            reverse("todo:delete_todo_item", args=[self.todo.pk])
-        )
+        response = self.client.post(reverse("todo:delete_todo_item", args=[self.todo.pk]))
         self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
 
     def test_response_contains_pagination_oob(self):
         """レスポンスにOOBスワップ属性が含まれることを確認する。"""
-        response = self.client.delete(
-            reverse("todo:delete_todo_item", args=[self.todo.pk])
-        )
+        response = self.client.delete(reverse("todo:delete_todo_item", args=[self.todo.pk]))
         content = response.content.decode()
         self.assertIn('hx-swap-oob="true"', content)
 
@@ -293,21 +257,15 @@ class DeleteTodoItemViewTests(TestCase):
         TodoItem.objects.create(user=self.user, description="タスク3")
         self.assertEqual(TodoItem.objects.count(), 3)
 
-        response = self.client.delete(
-            reverse("todo:delete_todo_item", args=[self.todo.pk])
-        )
+        response = self.client.delete(reverse("todo:delete_todo_item", args=[self.todo.pk]))
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(TodoItem.objects.count(), 2)
         self.assertFalse(TodoItem.objects.filter(id=self.todo.pk).exists())
 
     def test_delete_cannot_touch_other_users_item(self):
         """他ユーザーのTodoは削除できないことを確認する。"""
-        other_todo = TodoItem.objects.create(
-            user=self.other_user, description="他人のタスク"
-        )
-        response = self.client.delete(
-            reverse("todo:delete_todo_item", args=[other_todo.pk])
-        )
+        other_todo = TodoItem.objects.create(user=self.other_user, description="他人のタスク")
+        response = self.client.delete(reverse("todo:delete_todo_item", args=[other_todo.pk]))
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
 
@@ -317,9 +275,7 @@ class DeleteAllTodoItemsViewTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
         self.user = user_model.objects.create_user(username="user", password="pass")
-        self.other_user = user_model.objects.create_user(
-            username="other", password="pass"
-        )
+        self.other_user = user_model.objects.create_user(username="other", password="pass")
         self.client.force_login(self.user)
 
     def test_delete_all_removes_all_items(self):
