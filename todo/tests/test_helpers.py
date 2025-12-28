@@ -1,5 +1,7 @@
 """ヘルパー関数のテスト。"""
 
+from urllib.parse import urlencode
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
@@ -52,3 +54,47 @@ class GetPaginatedTodosTests(TestCase):
         first_item = page_obj[0]
         last_item = page_obj[len(page_obj) - 1]
         self.assertGreater(first_item.created_at, last_item.created_at)
+
+    def test_filter_active(self):
+        """未完了のみのフィルタが正しく動作することを確認する。"""
+        assert self.user.id is not None
+        ids = list(
+            TodoItem.objects.filter(user=self.user)
+            .order_by("id")
+            .values_list("id", flat=True)[:5]
+        )
+        TodoItem.objects.filter(id__in=ids).update(completed=True)
+        page_obj = get_paginated_todos(user_id=self.user.id, status="active")
+        self.assertEqual(page_obj.paginator.count, 20)
+        self.assertTrue(all(not item.completed for item in page_obj))
+
+    def test_filter_completed(self):
+        """完了のみのフィルタが正しく動作することを確認する。"""
+        assert self.user.id is not None
+        ids = list(
+            TodoItem.objects.filter(user=self.user)
+            .order_by("id")
+            .values_list("id", flat=True)[:5]
+        )
+        TodoItem.objects.filter(id__in=ids).update(completed=True)
+        page_obj = get_paginated_todos(user_id=self.user.id, status="completed")
+        self.assertEqual(page_obj.paginator.count, 5)
+        self.assertTrue(all(item.completed for item in page_obj))
+
+    def test_search_query(self):
+        """検索クエリで説明文が絞り込まれることを確認する。"""
+        assert self.user.id is not None
+        TodoItem.objects.create(user=self.user, description="買い物: りんご")
+        TodoItem.objects.create(user=self.user, description="買い物: ばなな")
+        page_obj = get_paginated_todos(user_id=self.user.id, query="りんご")
+        self.assertEqual(page_obj.paginator.count, 1)
+        self.assertEqual(page_obj[0].description, "買い物: りんご")
+
+
+class QuerystringEncodingTests(TestCase):
+    """テンプレで利用するクエリ文字列のエンコード例を固定する。"""
+
+    def test_python_urlencode_matches_expected_order(self):
+        """テスト内で使うエンコード順（q → status）を明示する。"""
+        encoded = urlencode({"q": "abc", "status": "active"})
+        self.assertEqual(encoded, "q=abc&status=active")

@@ -4,13 +4,13 @@
         <input type="checkbox"
                class="form-check-input"
                {% if todo_item.completed %}checked{% endif %}
-               hx-post="{% url 'todo:update_todo_item' todo_item.id %}"
+               hx-post="{% url 'todo:update_todo_item' todo_item.id %}?page={{ current_page }}{% if filter_querystring %}&{{ filter_querystring }}{% endif %}"
                hx-target="#todo-item-{{ todo_item.id }}"
                hx-swap="outerHTML" />
     </label>
     <span class="todo-item__text {% if todo_item.completed %}text-decoration-line-through{% endif %}">{{ todo_item.description }}</span>
     <button class="todo-item__delete"
-            hx-delete="{% url 'todo:delete_todo_item' todo_item.id %}"
+            hx-delete="{% url 'todo:delete_todo_item' todo_item.id %}?page={{ current_page }}{% if filter_querystring %}&{{ filter_querystring }}{% endif %}"
             hx-target="#todo-list"
             hx-swap="innerHTML"
             hx-confirm="本当に削除しますか？"

@@ -12,16 +12,19 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 
 from django_todo.auth import get_authenticated_user_id
+from utils.enums import RequestMethod
 
 from ..forms import TodoItemForm
 from ..models import TodoItem
 from .helpers import (
     DEFAULT_PAGE,
+    build_todo_filter_querystring,
     get_paginated_todos,
     parse_page_number,
+    parse_todo_filter_status,
+    parse_todo_search_query,
     render_todo_list_with_pagination_oob,
 )
-from utils.enums import RequestMethod
 
 logger = logging.getLogger(__name__)
 
@@ -40,8 +43,19 @@ def todo_list(request: HttpRequest) -> HttpResponse:
     """
     user_id = get_authenticated_user_id(request)
     page_number = parse_page_number(request.GET.get("page"), default=DEFAULT_PAGE)
-    page_obj = get_paginated_todos(user_id=user_id, page_number=page_number)
+    query = parse_todo_search_query(request.GET.get("q"))
+    status_filter = parse_todo_filter_status(request.GET.get("status"))
+    page_obj = get_paginated_todos(
+        user_id=user_id,
+        page_number=page_number,
+        query=query,
+        status=status_filter,
+    )
     form = TodoItemForm()
+
+    filter_querystring = build_todo_filter_querystring(
+        query=query, status=status_filter
+    )
 
     return render(
         request,
@@ -49,6 +63,10 @@ def todo_list(request: HttpRequest) -> HttpResponse:
         {
             "page_obj": page_obj,
             "form": form,
+            "current_page": page_obj.number,
+            "current_q": query,
+            "current_status": status_filter,
+            "filter_querystring": filter_querystring,
         },
     )
 
@@ -67,8 +85,28 @@ def todo_items(request: HttpRequest) -> HttpResponse:
     """
     user_id = get_authenticated_user_id(request)
     page_number = parse_page_number(request.GET.get("page"), default=DEFAULT_PAGE)
-    page_obj = get_paginated_todos(user_id=user_id, page_number=page_number)
-    return render(request, "todo/_todo_list.html", {"page_obj": page_obj})
+    query = parse_todo_search_query(request.GET.get("q"))
+    status_filter = parse_todo_filter_status(request.GET.get("status"))
+    page_obj = get_paginated_todos(
+        user_id=user_id,
+        page_number=page_number,
+        query=query,
+        status=status_filter,
+    )
+    filter_querystring = build_todo_filter_querystring(
+        query=query, status=status_filter
+    )
+    return render(
+        request,
+        "todo/_todo_list.html",
+        {
+            "page_obj": page_obj,
+            "current_page": page_obj.number,
+            "current_q": query,
+            "current_status": status_filter,
+            "filter_querystring": filter_querystring,
+        },
+    )
 
 
 @login_required
@@ -89,6 +127,8 @@ def create_todo_item(request: HttpRequest) -> HttpResponse:
         return HttpResponse(status=HTTPStatus.BAD_REQUEST)
 
     user_id = get_authenticated_user_id(request)
+    query = parse_todo_search_query(request.GET.get("q"))
+    status_filter = parse_todo_filter_status(request.GET.get("status"))
     max_items = getattr(settings, "TODO_MAX_ITEMS_PER_USER", 1000)
     current_count = TodoItem.objects.filter(user_id=user_id).count()
     if current_count >= max_items:
@@ -98,12 +138,19 @@ def create_todo_item(request: HttpRequest) -> HttpResponse:
             current_count,
             max_items,
         )
-        page_obj = get_paginated_todos(user_id=user_id, page_number=DEFAULT_PAGE)
+        page_obj = get_paginated_todos(
+            user_id=user_id,
+            page_number=DEFAULT_PAGE,
+            query=query,
+            status=status_filter,
+        )
         return render_todo_list_with_pagination_oob(
             page_obj,
             form_error_message=(
                 f"Todoは1ユーザーあたり最大{max_items}件までです。不要なTodoを削除してください。"
             ),
+            query=query,
+            status_filter=status_filter,
             status=HTTPStatus.CONFLICT,
         )
 
@@ -118,11 +165,25 @@ def create_todo_item(request: HttpRequest) -> HttpResponse:
             todo_item.id,
             todo_item.description,
         )
-        page_obj = get_paginated_todos(user_id=user_id, page_number=DEFAULT_PAGE)
-        return render_todo_list_with_pagination_oob(page_obj)
+        page_obj = get_paginated_todos(
+            user_id=user_id,
+            page_number=DEFAULT_PAGE,
+            query=query,
+            status=status_filter,
+        )
+        return render_todo_list_with_pagination_oob(
+            page_obj,
+            query=query,
+            status_filter=status_filter,
+        )
 
     logger.warning("Todoアイテムの作成に失敗しました: errors=%s", form.errors.as_json())
-    page_obj = get_paginated_todos(user_id=user_id, page_number=DEFAULT_PAGE)
+    page_obj = get_paginated_todos(
+        user_id=user_id,
+        page_number=DEFAULT_PAGE,
+        query=query,
+        status=status_filter,
+    )
     message = (
         "Todoを入力してください。"
         if "description" in form.errors
@@ -131,6 +192,8 @@ def create_todo_item(request: HttpRequest) -> HttpResponse:
     return render_todo_list_with_pagination_oob(
         page_obj,
         form_error_message=message,
+        query=query,
+        status_filter=status_filter,
         status=HTTPStatus.BAD_REQUEST,
     )
 
@@ -156,6 +219,13 @@ def update_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         return HttpResponse(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
     user_id = get_authenticated_user_id(request)
+    page_number = parse_page_number(request.GET.get("page"), default=DEFAULT_PAGE)
+    query = parse_todo_search_query(request.GET.get("q"))
+    status_filter = parse_todo_filter_status(request.GET.get("status"))
+    filter_querystring = build_todo_filter_querystring(
+        query=query, status=status_filter
+    )
+
     todo_item = get_object_or_404(TodoItem, id=item_id, user_id=user_id)
     old_status = todo_item.completed
     todo_item.completed = not todo_item.completed
@@ -167,7 +237,17 @@ def update_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         old_status,
         todo_item.completed,
     )
-    return render(request, "todo/_todo_item.html", {"todo_item": todo_item})
+    return render(
+        request,
+        "todo/_todo_item.html",
+        {
+            "todo_item": todo_item,
+            "current_page": page_number,
+            "current_q": query,
+            "current_status": status_filter,
+            "filter_querystring": filter_querystring,
+        },
+    )
 
 
 @login_required
@@ -194,6 +274,8 @@ def delete_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     user_id = get_authenticated_user_id(request)
     todo_item = get_object_or_404(TodoItem, id=item_id, user_id=user_id)
     page_number = parse_page_number(request.GET.get("page"), default=DEFAULT_PAGE)
+    query = parse_todo_search_query(request.GET.get("q"))
+    status_filter = parse_todo_filter_status(request.GET.get("status"))
     description = todo_item.description
     todo_item.delete()
     logger.info(
@@ -202,8 +284,17 @@ def delete_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         item_id,
         description,
     )
-    page_obj = get_paginated_todos(user_id=user_id, page_number=page_number)
-    return render_todo_list_with_pagination_oob(page_obj)
+    page_obj = get_paginated_todos(
+        user_id=user_id,
+        page_number=page_number,
+        query=query,
+        status=status_filter,
+    )
+    return render_todo_list_with_pagination_oob(
+        page_obj,
+        query=query,
+        status_filter=status_filter,
+    )
 
 
 @login_required
@@ -224,6 +315,8 @@ def delete_all_todo_items(request: HttpRequest) -> HttpResponse:
         return HttpResponse(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
     user_id = get_authenticated_user_id(request)
+    query = parse_todo_search_query(request.GET.get("q"))
+    status_filter = parse_todo_filter_status(request.GET.get("status"))
     queryset = TodoItem.objects.filter(user_id=user_id)
     count = queryset.count()
     queryset.delete()
@@ -232,5 +325,14 @@ def delete_all_todo_items(request: HttpRequest) -> HttpResponse:
         user_id,
         count,
     )
-    page_obj = get_paginated_todos(user_id=user_id, page_number=DEFAULT_PAGE)
-    return render_todo_list_with_pagination_oob(page_obj)
+    page_obj = get_paginated_todos(
+        user_id=user_id,
+        page_number=DEFAULT_PAGE,
+        query=query,
+        status=status_filter,
+    )
+    return render_todo_list_with_pagination_oob(
+        page_obj,
+        query=query,
+        status_filter=status_filter,
+    )

@@ -1,0 +1,22 @@
+<form method="get" action="{% url 'todo:todo_list' %}" class="mb-2">
+    <div class="row g-2 align-items-center">
+        <div class="col-12 col-md">
+            <input type="search"
+                   name="q"
+                   value="{{ current_q|default:'' }}"
+                   class="form-control"
+                   placeholder="Todoを検索..." />
+        </div>
+        <div class="col-6 col-md-auto">
+            <select name="status" class="form-select">
+                <option value="all" {% if current_status == 'all' %}selected{% endif %}>すべて</option>
+                <option value="active" {% if current_status == 'active' %}selected{% endif %}>未完了</option>
+                <option value="completed"
+                        {% if current_status == 'completed' %}selected{% endif %}>完了</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-auto">
+            <button type="submit" class="btn btn-outline-secondary w-100">絞り込み</button>
+        </div>
+    </div>
+</form>

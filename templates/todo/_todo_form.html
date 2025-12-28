@@ -1,4 +1,4 @@
-<form hx-post="{% url 'todo:create_todo_item' %}"
+<form hx-post="{% url 'todo:create_todo_item' %}{% if filter_querystring %}?{{ filter_querystring }}{% endif %}"
       hx-target="#todo-list"
       hx-swap="innerHTML"
       hx-on::after-request="if(event.detail.successful) this.reset()"

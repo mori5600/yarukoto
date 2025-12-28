@@ -3,7 +3,7 @@
     <div class="todo-info__actions">
         {% if page_obj.paginator.count > 0 %}
             <button class="btn btn-sm btn-outline-danger"
-                    hx-delete="{% url 'todo:delete_all_todo_items' %}"
+                    hx-delete="{% url 'todo:delete_all_todo_items' %}{% if filter_querystring %}?{{ filter_querystring }}{% endif %}"
                     hx-target="#todo-list"
                     hx-swap="innerHTML"
                     hx-confirm="全てのTodoを削除しますか？"
@@ -21,7 +21,7 @@
             </button>
         {% endif %}
         <button class="btn btn-sm btn-outline-secondary"
-                hx-get="{% url 'todo:todo_list' %}"
+                hx-get="{% url 'todo:todo_list' %}{% if filter_querystring %}?{{ filter_querystring }}{% endif %}"
                 hx-target="body"
                 hx-push-url="true"
                 title="更新">

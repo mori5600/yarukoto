@@ -1,6 +1,7 @@
 """ビューのテスト。"""
 
 from http import HTTPStatus
+from urllib.parse import urlencode
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
@@ -85,6 +86,24 @@ class TodoItemsViewTests(TestCase):
         """ページパラメータが正しく処理されることを確認する。"""
         response = self.client.get(reverse("todo:todo_items"), {"page": "1"})
         self.assertEqual(response.status_code, HTTPStatus.OK)
+
+    def test_infinite_scroll_keeps_querystring(self):
+        """無限スクロールの次ページURLが検索/フィルタ条件を保持することを確認する。"""
+        TodoItem.objects.all().delete()
+        for i in range(15):
+            TodoItem.objects.create(user=self.user, description=f"タスク {i + 1}")
+
+        response = self.client.get(
+            reverse("todo:todo_items"),
+            {"page": "1", "q": "タスク", "status": "active"},
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        expected_filter = urlencode({"q": "タスク", "status": "active"}).replace(
+            "&", "&amp;"
+        )
+        content = response.content.decode()
+        self.assertIn(f"?page=2&{expected_filter}", content)
 
 
 class DocsViewTests(TestCase):
