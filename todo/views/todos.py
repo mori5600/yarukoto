@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 # 定数
 DEFAULT_PAGE: Final[int] = 1
 TODOS_PER_PAGE: Final[int] = 10
+DESCRIPTION_MAX_LENGTH: Final[int] = 255
 TODO_LIST_ID: Final[str] = "todo-list"
 PAGINATION_INFO_ID: Final[str] = "pagination-info"
 TODO_FORM_ERRORS_ID: Final[str] = "todo-form-errors"
@@ -353,7 +354,9 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
 
     raw_description = request.POST.get("description", "")
     new_description = raw_description.strip()
-    max_length = int(TodoItem._meta.get_field("description").max_length)
+    description_field = TodoItem._meta.get_field("description")
+    field_max_length = getattr(description_field, "max_length", None)
+    max_length = field_max_length if isinstance(field_max_length, int) else DESCRIPTION_MAX_LENGTH
     if not new_description:
         return render(
             request,
