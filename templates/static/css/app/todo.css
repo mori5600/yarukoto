@@ -237,6 +237,32 @@
   .todo-info__actions .btn {
     white-space: nowrap;
   }
+
+  .todo-details {
+    width: 100%;
+  }
+
+  .todo-details__summary {
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    font-size: 0.9rem;
+    line-height: 1.25;
+  }
+
+  .todo-details__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .todo-details__summary::before {
+    content: "▸";
+    display: inline-block;
+    margin-right: 0.5rem;
+  }
+
+  details[open] > .todo-details__summary::before {
+    content: "▾";
+  }
 }
 
 /* テーブル */

@@ -1,28 +1,62 @@
-<form method="get" action="{% url 'todo:todo_list' %}" class="mb-2">
-    <div class="row g-2 align-items-center">
-        <div class="col-12 col-md">
-            <input type="search"
-                   name="q"
-                   value="{{ current_q|default:'' }}"
-                   class="form-control"
-                   placeholder="Todoを検索..." />
-        </div>
-        <div class="col-6 col-md-auto">
-            <select name="status" class="form-select">
-                <option value="all" {% if current_status == 'all' %}selected{% endif %}>すべて</option>
-                <option value="active" {% if current_status == 'active' %}selected{% endif %}>未完了</option>
-                <option value="completed"
-                        {% if current_status == 'completed' %}selected{% endif %}>完了</option>
-            </select>
-        </div>
-        <div class="col-6 col-md-auto">
-            <button type="submit" class="btn btn-outline-secondary w-100">絞り込み</button>
-        </div>
-        {% if current_q or current_status != 'all' %}
-            <div class="col-6 col-md-auto">
-                <a href="{% url 'todo:todo_list' %}"
-                   class="btn btn-outline-secondary w-100">クリア</a>
+<div class="d-none d-sm-block">
+    <form method="get" action="{% url 'todo:todo_list' %}" class="mb-2">
+        <div class="row g-2 align-items-center">
+            <div class="col-12 col-md">
+                <input type="search"
+                       name="q"
+                       value="{{ current_q|default:'' }}"
+                       class="form-control"
+                       placeholder="Todoを検索..." />
             </div>
-        {% endif %}
-    </div>
-</form>
+            <div class="col-6 col-md-auto">
+                <select name="status" class="form-select">
+                    <option value="all" {% if current_status == 'all' %}selected{% endif %}>すべて</option>
+                    <option value="active" {% if current_status == 'active' %}selected{% endif %}>未完了</option>
+                    <option value="completed"
+                            {% if current_status == 'completed' %}selected{% endif %}>完了</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-auto">
+                <button type="submit" class="btn btn-outline-secondary w-100">絞り込み</button>
+            </div>
+            {% if current_q or current_status != 'all' %}
+                <div class="col-6 col-md-auto">
+                    <a href="{% url 'todo:todo_list' %}"
+                       class="btn btn-outline-secondary w-100">クリア</a>
+                </div>
+            {% endif %}
+        </div>
+    </form>
+</div>
+<details class="todo-details d-sm-none"
+         {% if current_q or current_status != 'all' %}open{% endif %}>
+    <summary class="todo-details__summary">検索・絞り込み</summary>
+    <form method="get" action="{% url 'todo:todo_list' %}" class="mt-2">
+        <div class="row g-2 align-items-center">
+            <div class="col-12">
+                <input type="search"
+                       name="q"
+                       value="{{ current_q|default:'' }}"
+                       class="form-control"
+                       placeholder="Todoを検索..." />
+            </div>
+            <div class="col-6">
+                <select name="status" class="form-select">
+                    <option value="all" {% if current_status == 'all' %}selected{% endif %}>すべて</option>
+                    <option value="active" {% if current_status == 'active' %}selected{% endif %}>未完了</option>
+                    <option value="completed"
+                            {% if current_status == 'completed' %}selected{% endif %}>完了</option>
+                </select>
+            </div>
+            <div class="col-6">
+                <button type="submit" class="btn btn-outline-secondary w-100">絞り込み</button>
+            </div>
+            {% if current_q or current_status != 'all' %}
+                <div class="col-12">
+                    <a href="{% url 'todo:todo_list' %}"
+                       class="btn btn-outline-secondary w-100">クリア</a>
+                </div>
+            {% endif %}
+        </div>
+    </form>
+</details>
