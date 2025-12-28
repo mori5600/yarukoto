@@ -18,5 +18,11 @@
         <div class="col-6 col-md-auto">
             <button type="submit" class="btn btn-outline-secondary w-100">絞り込み</button>
         </div>
+        {% if current_q or current_status != 'all' %}
+            <div class="col-6 col-md-auto">
+                <a href="{% url 'todo:todo_list' %}"
+                   class="btn btn-outline-secondary w-100">クリア</a>
+            </div>
+        {% endif %}
     </div>
 </form>
