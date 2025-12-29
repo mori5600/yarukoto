@@ -5,8 +5,9 @@ Todo一覧のページング/検索/フィルタなど、一覧表示に必要�
 """
 
 import logging
+from enum import StrEnum
 from http import HTTPStatus
-from typing import Final, Literal
+from typing import Final
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -34,27 +35,75 @@ TODO_COUNT_ID: Final[str] = "todo-count"
 TODO_FORM_ERRORS_ID: Final[str] = "todo-form-errors"
 
 
-type TodoFilterStatus = Literal["all", "active", "completed"]
+class TodoFilterStatus(StrEnum):
+    ALL = "all"
+    ACTIVE = "active"
+    COMPLETED = "completed"
 
-type TodoSortKey = Literal["created", "updated", "active_first"]
+
+DEFAULT_TODO_FILTER_STATUS: Final[TodoFilterStatus] = TodoFilterStatus.ALL
 
 
-def parse_todo_sort_key(raw_sort: str | None) -> TodoSortKey:
+class TodoSortKey(StrEnum):
+    CREATED = "created"
+    UPDATED = "updated"
+    ACTIVE_FIRST = "active_first"
+
+
+DEFAULT_TODO_SORT_KEY: Final[TodoSortKey] = TodoSortKey.CREATED
+
+
+def normalize_todo_sort_key(raw_sort: str | TodoSortKey | None) -> TodoSortKey:
     """Todo一覧の並び替えキーを正規化する。
 
     Args:
         raw_sort: クエリパラメータ等で受け取った並び替えキー。
 
     Returns:
-        正規化された並び替えキー。未指定・不正値は "created"。
+        正規化された並び替えキー。未指定・不正値は created。
     """
     if raw_sort is None:
-        return "created"
+        return DEFAULT_TODO_SORT_KEY
+    if isinstance(raw_sort, TodoSortKey):
+        return raw_sort
 
-    sort_key = raw_sort.strip().lower()
-    if sort_key in {"created", "updated", "active_first"}:
-        return sort_key  # type: ignore[return-value]
-    return "created"
+    sort_key = str(raw_sort).strip().lower()
+    if not sort_key:
+        return DEFAULT_TODO_SORT_KEY
+
+    try:
+        return TodoSortKey(sort_key)
+    except ValueError:
+        return DEFAULT_TODO_SORT_KEY
+
+
+def parse_todo_sort_key(raw_sort: str | None) -> TodoSortKey:
+    """Todo一覧の並び替えキーを正規化する（クエリ文字列専用）。"""
+    return normalize_todo_sort_key(raw_sort)
+
+
+def normalize_todo_filter_status(raw_status: str | TodoFilterStatus | None) -> TodoFilterStatus:
+    """Todoのフィルタ状態を正規化する。
+
+    Args:
+        raw_status: クエリパラメータ等で受け取ったフィルタ状態。
+
+    Returns:
+        正規化されたフィルタ状態。未指定・不正値は all。
+    """
+    if raw_status is None:
+        return DEFAULT_TODO_FILTER_STATUS
+    if isinstance(raw_status, TodoFilterStatus):
+        return raw_status
+
+    status = str(raw_status).strip().lower()
+    if not status:
+        return DEFAULT_TODO_FILTER_STATUS
+
+    try:
+        return TodoFilterStatus(status)
+    except ValueError:
+        return DEFAULT_TODO_FILTER_STATUS
 
 
 def parse_todo_filter_status(raw_status: str | None) -> TodoFilterStatus:
@@ -66,13 +115,7 @@ def parse_todo_filter_status(raw_status: str | None) -> TodoFilterStatus:
     Returns:
         正規化されたフィルタ状態。未指定・不正値は "all"。
     """
-    if raw_status is None:
-        return "all"
-
-    status = raw_status.strip().lower()
-    if status in {"all", "active", "completed"}:
-        return status  # type: ignore[return-value]
-    return "all"
+    return normalize_todo_filter_status(raw_status)
 
 
 def parse_todo_search_query(raw_query: str | None) -> str:
@@ -112,10 +155,10 @@ def build_todo_list_querystring(
 
     if query:
         params["q"] = query
-    if status != "all":
-        params["status"] = status
-    if sort_key != "created":
-        params["sort"] = sort_key
+    if status != DEFAULT_TODO_FILTER_STATUS:
+        params["status"] = status.value
+    if sort_key != DEFAULT_TODO_SORT_KEY:
+        params["sort"] = sort_key.value
 
     if not params:
         return ""
@@ -173,8 +216,8 @@ def get_paginated_todos(
     page_number=DEFAULT_PAGE,
     per_page=TODOS_PER_PAGE,
     query: str = "",
-    status: TodoFilterStatus = "all",
-    sort_key: TodoSortKey = "created",
+    status: TodoFilterStatus | str = DEFAULT_TODO_FILTER_STATUS,
+    sort_key: TodoSortKey | str = DEFAULT_TODO_SORT_KEY,
 ):
     """ページネーション済みのTodoリストを取得する。
 
@@ -190,19 +233,22 @@ def get_paginated_todos(
         ページオブジェクト。指定されたページのTodoアイテムと
         ページネーション情報を含む。
     """
+    normalized_status = normalize_todo_filter_status(status)
+    normalized_sort_key = normalize_todo_sort_key(sort_key)
+
     todo_items_list = TodoItem.objects.filter(user_id=user_id)
 
-    if status == "active":
+    if normalized_status == TodoFilterStatus.ACTIVE:
         todo_items_list = todo_items_list.filter(completed=False)
-    elif status == "completed":
+    elif normalized_status == TodoFilterStatus.COMPLETED:
         todo_items_list = todo_items_list.filter(completed=True)
 
     if query:
         todo_items_list = todo_items_list.filter(description__icontains=query)
 
-    if sort_key == "updated":
+    if normalized_sort_key == TodoSortKey.UPDATED:
         todo_items_list = todo_items_list.order_by("-updated_at", "-created_at")
-    elif sort_key == "active_first":
+    elif normalized_sort_key == TodoSortKey.ACTIVE_FIRST:
         todo_items_list = todo_items_list.order_by("completed", "-created_at")
     else:
         todo_items_list = todo_items_list.order_by("-created_at")
@@ -216,8 +262,8 @@ def render_todo_list_with_pagination_oob(
     *,
     form_error_message: str | None = None,
     query: str = "",
-    status_filter: TodoFilterStatus = "all",
-    sort_key: TodoSortKey = "created",
+    status_filter: TodoFilterStatus = DEFAULT_TODO_FILTER_STATUS,
+    sort_key: TodoSortKey = DEFAULT_TODO_SORT_KEY,
     include_main_list: bool = True,
     include_list_oob: bool = False,
     status: HTTPStatus = HTTPStatus.OK,
@@ -244,8 +290,8 @@ def render_todo_list_with_pagination_oob(
         "page_obj": page_obj,
         "current_page": getattr(page_obj, "number", DEFAULT_PAGE),
         "current_q": query,
-        "current_status": status_filter,
-        "current_sort": sort_key,
+        "current_status": status_filter.value,
+        "current_sort": sort_key.value,
         "list_querystring": list_querystring,
     }
 
@@ -319,8 +365,8 @@ def todo_item_partial(request: HttpRequest, item_id: int) -> HttpResponse:
             "todo_item": todo_item,
             "current_page": page_number,
             "current_q": query,
-            "current_status": status_filter,
-            "current_sort": sort_key,
+            "current_status": status_filter.value,
+            "current_sort": sort_key.value,
             "list_querystring": list_querystring,
         },
     )
@@ -369,8 +415,8 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
                 "todo_item": todo_item,
                 "current_page": page_number,
                 "current_q": query,
-                "current_status": status_filter,
-                "current_sort": sort_key,
+                "current_status": status_filter.value,
+                "current_sort": sort_key.value,
                 "list_querystring": list_querystring,
             },
         )
@@ -391,8 +437,8 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
                 "error_message": "Todoを入力してください。",
                 "current_page": page_number,
                 "current_q": query,
-                "current_status": status_filter,
-                "current_sort": sort_key,
+                "current_status": status_filter.value,
+                "current_sort": sort_key.value,
                 "list_querystring": list_querystring,
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -408,8 +454,8 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
                 "error_message": f"Todoは最大{max_length}文字までです。",
                 "current_page": page_number,
                 "current_q": query,
-                "current_status": status_filter,
-                "current_sort": sort_key,
+                "current_status": status_filter.value,
+                "current_sort": sort_key.value,
                 "list_querystring": list_querystring,
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -435,8 +481,8 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
             "todo_item": todo_item,
             "current_page": page_number,
             "current_q": query,
-            "current_status": status_filter,
-            "current_sort": sort_key,
+            "current_status": status_filter.value,
+            "current_sort": sort_key.value,
             "list_querystring": list_querystring,
         },
     )
@@ -445,7 +491,7 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     # - 検索中(qあり)は、編集により検索結果から外れる/入る可能性があるので一覧更新する
     # - sort=updated は updated_at で順序が動くので一覧更新する
     # - 変更がなければ何も動かないので一覧更新しない
-    needs_list_refresh = changed and (bool(query) or sort_key == "updated")
+    needs_list_refresh = changed and (bool(query) or sort_key == TodoSortKey.UPDATED)
     if not needs_list_refresh:
         return HttpResponse(item_html)
 
@@ -510,8 +556,8 @@ def todo_list(request: HttpRequest) -> HttpResponse:
             "form": form,
             "current_page": page_obj.number,
             "current_q": query,
-            "current_status": status_filter,
-            "current_sort": sort_key,
+            "current_status": status_filter.value,
+            "current_sort": sort_key.value,
             "list_querystring": list_querystring,
         },
     )
@@ -554,8 +600,8 @@ def todo_items(request: HttpRequest) -> HttpResponse:
             "page_obj": page_obj,
             "current_page": page_obj.number,
             "current_q": query,
-            "current_status": status_filter,
-            "current_sort": sort_key,
+            "current_status": status_filter.value,
+            "current_sort": sort_key.value,
             "list_querystring": list_querystring,
         },
     )
@@ -704,8 +750,8 @@ def update_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
             "todo_item": todo_item,
             "current_page": page_number,
             "current_q": query,
-            "current_status": status_filter,
-            "current_sort": sort_key,
+            "current_status": status_filter.value,
+            "current_sort": sort_key.value,
             "list_querystring": list_querystring,
         },
     )
@@ -714,7 +760,9 @@ def update_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     # - status != all: トグルで一覧から消える/出る可能性
     # - sort=active_first: completed が変わると順序が変わる
     # - sort=updated: updated_at が更新され、順序が変わる
-    needs_list_refresh = (status_filter != "all") or (sort_key in {"active_first", "updated"})
+    needs_list_refresh = (status_filter != TodoFilterStatus.ALL) or (
+        sort_key in {TodoSortKey.ACTIVE_FIRST, TodoSortKey.UPDATED}
+    )
     if not needs_list_refresh:
         return HttpResponse(item_html)
 
