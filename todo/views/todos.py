@@ -48,7 +48,6 @@ def parse_todo_sort_key(raw_sort: str | None) -> TodoSortKey:
     Returns:
         正規化された並び替えキー。未指定・不正値は "created"。
     """
-
     if raw_sort is None:
         return "created"
 
@@ -67,7 +66,6 @@ def parse_todo_filter_status(raw_status: str | None) -> TodoFilterStatus:
     Returns:
         正規化されたフィルタ状態。未指定・不正値は "all"。
     """
-
     if raw_status is None:
         return "all"
 
@@ -86,7 +84,6 @@ def parse_todo_search_query(raw_query: str | None) -> str:
     Returns:
         前後空白を除去した検索文字列。未指定は空文字。
     """
-
     if raw_query is None:
         return ""
     return raw_query.strip()
@@ -111,7 +108,6 @@ def build_todo_list_querystring(
         URLエンコード済みのクエリ文字列。
         デフォルト状態（query="" かつ status="all" かつ sort_key="created"）は空文字。
     """
-
     params: dict[str, str] = {}
 
     if query:
@@ -136,7 +132,6 @@ def parse_page_number(raw_page_number: str | int | None, *, default: int = DEFAU
     Returns:
         正規化されたページ番号。
     """
-
     if raw_page_number is None:
         return default
 
@@ -148,6 +143,28 @@ def parse_page_number(raw_page_number: str | int | None, *, default: int = DEFAU
     if page_number < 1:
         return default
     return page_number
+
+
+def is_todo_limit_reached(*, user_id: int, max_items: int) -> bool:
+    """指定ユーザーのTodoが上限に達しているかを軽く判定する。
+
+    Note:
+        「件数そのもの」ではなく「max_items 件目が存在するか」を見ることで、
+        毎回の COUNT(*) を避ける（通常ルートを軽くする）。
+        上限到達時のログ等で件数が必要なら、その時だけ count() する。
+
+    Args:
+        user_id: 対象ユーザーID。
+        max_items: 上限件数。
+
+    Returns:
+        上限に達していれば True。
+    """
+    if max_items <= 0:
+        return True
+
+    # OFFSET/LIMIT で 1 行だけ取る（存在すれば max_items 以上ある）
+    return TodoItem.objects.filter(user_id=user_id).values("id").order_by("id")[max_items - 1 : max_items].exists()
 
 
 def get_paginated_todos(
@@ -173,8 +190,8 @@ def get_paginated_todos(
         ページオブジェクト。指定されたページのTodoアイテムと
         ページネーション情報を含む。
     """
-
     todo_items_list = TodoItem.objects.filter(user_id=user_id)
+
     if status == "active":
         todo_items_list = todo_items_list.filter(completed=False)
     elif status == "completed":
@@ -189,6 +206,7 @@ def get_paginated_todos(
         todo_items_list = todo_items_list.order_by("completed", "-created_at")
     else:
         todo_items_list = todo_items_list.order_by("-created_at")
+
     paginator = Paginator(todo_items_list, per_page)
     return paginator.get_page(page_number)
 
@@ -217,7 +235,6 @@ def render_todo_list_with_pagination_oob(
     Returns:
         レンダリングされたHTMLを含むHttpResponse。
     """
-
     list_querystring = build_todo_list_querystring(
         query=query,
         status=status_filter,
@@ -280,7 +297,6 @@ def todo_item_partial(request: HttpRequest, item_id: int) -> HttpResponse:
         レンダリングされたTodoアイテムHTMLを含むHttpResponse。
         メソッド不正時: 405 Method Not AllowedのHttpResponse。
     """
-
     if request.method != RequestMethod.GET:
         return HttpResponse(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
@@ -317,7 +333,7 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     GET: 編集フォーム行（パーシャル）を返す。
     POST: 説明文を更新し、
         - 対象行は通常表示へ戻す（メインスワップ）
-        - Todo一覧とページネーション情報はOOBで再描画する（正しさ優先）
+        - 必要な場合のみ Todo一覧とページネーション情報をOOBで再描画する（速度優先）
 
     Args:
         request: HTTPリクエストオブジェクト。
@@ -325,11 +341,10 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
 
     Returns:
         GET: 編集フォームのHTMLを含むHttpResponse。
-        POST成功: 対象行 + OOB更新を含むHttpResponse。
+        POST成功: 対象行 +（必要に応じて）OOB更新を含むHttpResponse。
         バリデーション失敗: 編集フォームのHTMLを含む 400 Bad Request。
         メソッド不正時: 405 Method Not AllowedのHttpResponse。
     """
-
     if request.method not in {RequestMethod.GET, RequestMethod.POST}:
         return HttpResponse(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
@@ -365,6 +380,7 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     description_field = TodoItem._meta.get_field("description")
     field_max_length = getattr(description_field, "max_length", None)
     max_length = field_max_length if isinstance(field_max_length, int) else DESCRIPTION_MAX_LENGTH
+
     if not new_description:
         return render(
             request,
@@ -381,6 +397,7 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
             },
             status=HTTPStatus.BAD_REQUEST,
         )
+
     if len(new_description) > max_length:
         return render(
             request,
@@ -399,9 +416,11 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         )
 
     old_description = todo_item.description
+    changed = False
     if new_description != old_description:
         todo_item.description = new_description
         todo_item.save(update_fields=["description", "updated_at"])
+        changed = True
         logger.info(
             "Todoアイテムを編集しました: user_id=%s, id=%d, description='%s' -> '%s'",
             getattr(request.user, "id", None),
@@ -410,7 +429,26 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
             new_description,
         )
 
-    # 正しさ優先: 編集により並び順が変わる可能性があるので、一覧をOOBで再描画する。
+    item_html = render_to_string(
+        "todo/_todo_item.html",
+        {
+            "todo_item": todo_item,
+            "current_page": page_number,
+            "current_q": query,
+            "current_status": status_filter,
+            "current_sort": sort_key,
+            "list_querystring": list_querystring,
+        },
+    )
+
+    # 速度優先:
+    # - 検索中(qあり)は、編集により検索結果から外れる/入る可能性があるので一覧更新する
+    # - sort=updated は updated_at で順序が動くので一覧更新する
+    # - 変更がなければ何も動かないので一覧更新しない
+    needs_list_refresh = changed and (bool(query) or sort_key == "updated")
+    if not needs_list_refresh:
+        return HttpResponse(item_html)
+
     page_obj = get_paginated_todos(
         user_id=user_id,
         page_number=page_number,
@@ -425,17 +463,6 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         sort_key=sort_key,
         include_main_list=False,
         include_list_oob=True,
-    )
-    item_html = render_to_string(
-        "todo/_todo_item.html",
-        {
-            "todo_item": todo_item,
-            "current_page": page_number,
-            "current_q": query,
-            "current_status": status_filter,
-            "current_sort": sort_key,
-            "list_querystring": list_querystring,
-        },
     )
     return HttpResponse(
         item_html + oob_response.content.decode("utf-8"),
@@ -556,8 +583,11 @@ def create_todo_item(request: HttpRequest) -> HttpResponse:
     status_filter = parse_todo_filter_status(request.GET.get("status"))
     sort_key = parse_todo_sort_key(request.GET.get("sort"))
     max_items = getattr(settings, "TODO_MAX_ITEMS_PER_USER", 1000)
-    current_count = TodoItem.objects.filter(user_id=user_id).count()
-    if current_count >= max_items:
+
+    # 速度優先: 通常ルートは count() を避ける
+    if is_todo_limit_reached(user_id=user_id, max_items=max_items):
+        # 上限到達は稀なので、ログ用にここでだけ count()（必要なら）
+        current_count = TodoItem.objects.filter(user_id=user_id).count()
         logger.info(
             "Todo上限に達しました: user_id=%s, count=%d, max=%d",
             user_id,
@@ -658,7 +688,7 @@ def update_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     todo_item = get_object_or_404(TodoItem, id=item_id, user_id=user_id)
     old_status = todo_item.completed
     todo_item.completed = not todo_item.completed
-    todo_item.save()
+    todo_item.save(update_fields=["completed", "updated_at"])
     logger.info(
         "Todoアイテムの完了状態を更新しました: user_id=%s, id=%d, completed=%s -> %s",
         getattr(request.user, "id", None),
@@ -666,8 +696,9 @@ def update_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         old_status,
         todo_item.completed,
     )
-    return render(
-        request,
+
+    # 通常は「行だけ」返して最速にする。
+    item_html = render_to_string(
         "todo/_todo_item.html",
         {
             "todo_item": todo_item,
@@ -677,6 +708,34 @@ def update_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
             "current_sort": sort_key,
             "list_querystring": list_querystring,
         },
+    )
+
+    # ただし次のケースでは一覧の内容/順序が変わり得るので OOB で一覧も更新する。
+    # - status != all: トグルで一覧から消える/出る可能性
+    # - sort=active_first: completed が変わると順序が変わる
+    # - sort=updated: updated_at が更新され、順序が変わる
+    needs_list_refresh = (status_filter != "all") or (sort_key in {"active_first", "updated"})
+    if not needs_list_refresh:
+        return HttpResponse(item_html)
+
+    page_obj = get_paginated_todos(
+        user_id=user_id,
+        page_number=page_number,
+        query=query,
+        status=status_filter,
+        sort_key=sort_key,
+    )
+    oob_response = render_todo_list_with_pagination_oob(
+        page_obj,
+        query=query,
+        status_filter=status_filter,
+        sort_key=sort_key,
+        include_main_list=False,
+        include_list_oob=True,
+    )
+    return HttpResponse(
+        item_html + oob_response.content.decode("utf-8"),
+        status=oob_response.status_code,
     )
 
 
@@ -751,14 +810,15 @@ def delete_all_todo_items(request: HttpRequest) -> HttpResponse:
     query = parse_todo_search_query(request.GET.get("q"))
     status_filter = parse_todo_filter_status(request.GET.get("status"))
     sort_key = parse_todo_sort_key(request.GET.get("sort"))
+
     queryset = TodoItem.objects.filter(user_id=user_id)
-    count = queryset.count()
-    queryset.delete()
+    deleted_count, _ = queryset.delete()
     logger.info(
         "全てのTodoアイテムを一括削除しました: user_id=%s, 削除件数=%d",
         user_id,
-        count,
+        deleted_count,
     )
+
     page_obj = get_paginated_todos(
         user_id=user_id,
         page_number=DEFAULT_PAGE,

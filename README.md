@@ -13,7 +13,7 @@ docker compose -f docker-compose.dev.yml up --build
 別ターミナルで以下を実行します。
 
 ```bash
-docker compose -f docker-compose.dev.yml run --rm web python manage.py migrate
+docker compose -f docker-compose.dev.yml run --rm web uv run manage.py migrate
 ```
 
 ### 本番起動（例）

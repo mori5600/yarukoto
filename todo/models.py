@@ -37,7 +37,12 @@ class TodoItem(models.Model):
 
     class Meta:
         indexes = [
+            # ユーザーのTodoを作成日時の降順で取り出す用途
             models.Index(fields=["user", "-created_at"], name="todo_user_created_at"),
+            # completed フィルタ + created_at 並び（active_first / statusフィルタの高速化に効く）
+            models.Index(fields=["user", "completed", "-created_at"], name="todo_user_completed_created"),
+            # updated_at 並び（sort=updated の高速化に効く）
+            models.Index(fields=["user", "-updated_at", "-created_at"], name="todo_user_updated_created"),
         ]
 
     def __str__(self) -> str:
