@@ -91,6 +91,11 @@
 
 .todo-item__edit-form .btn {
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
 }
 
 /* 空の状態 */

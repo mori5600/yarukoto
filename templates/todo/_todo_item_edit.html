@@ -10,7 +10,7 @@
         <form hx-post="{% url 'todo:edit_todo_item' todo_item.id %}?page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
               hx-target="#todo-item-{{ todo_item.id }}"
               hx-swap="outerHTML"
-              class="todo-item__edit-form d-flex align-items-center gap-2">
+              class="todo-item__edit-form d-flex align-items-stretch gap-2">
             <input type="text"
                    name="description"
                    value="{{ draft_description|default:todo_item.description }}"
@@ -18,9 +18,9 @@
                    maxlength="255"
                    required
                    autofocus />
-            <button type="submit" class="btn btn-sm btn-primary">保存</button>
+            <button type="submit" class="btn btn-primary">保存</button>
             <button type="button"
-                    class="btn btn-sm btn-outline-secondary"
+                    class="btn btn-outline-secondary"
                     hx-get="{% url 'todo:todo_item_partial' todo_item.id %}?page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
                     hx-target="#todo-item-{{ todo_item.id }}"
                     hx-swap="outerHTML">キャンセル</button>
