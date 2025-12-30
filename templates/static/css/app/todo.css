@@ -36,6 +36,24 @@
   opacity: 0.7;
 }
 
+/* 完了トグル時のポップアニメーション */
+.todo-item--pop {
+  animation: todoPop 300ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes todoPop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-lg), 0 0 20px var(--success-glow);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 .todo-item--completed:hover {
   border-color: var(--success-color);
 }
