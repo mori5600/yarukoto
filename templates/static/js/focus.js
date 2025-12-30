@@ -78,6 +78,13 @@
   $(document).on("click", "#timer-reset", resetTimer);
 
   // ========================================
+  // タイマー表示トグル
+  // ========================================
+  $(document).on("click", "#timer-toggle", function () {
+    $("#pomodoro-timer").toggleClass("todo-focus-mode__timer--hidden");
+  });
+
+  // ========================================
   // フォーカスモード起動時にタイマーを初期化
   // ========================================
   $(document.body).on("htmx:afterSwap", function (e) {

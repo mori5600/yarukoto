@@ -51,6 +51,21 @@
   transform: rotate(90deg);
 }
 
+.todo-focus-mode__timer-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.todo-focus-mode__timer-toggle:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
 .todo-focus-mode__content {
   flex: 1;
   display: flex;

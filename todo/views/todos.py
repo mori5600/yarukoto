@@ -903,10 +903,6 @@ def delete_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         description,
     )
 
-    # フォーカスモードから削除した場合は、フォーカスモード自体を終了
-    if is_focus_mode:
-        return HttpResponse("")
-
     page_obj = get_paginated_todos(
         user_id=user_id,
         page_number=page_number,
@@ -914,6 +910,19 @@ def delete_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         status=status_filter,
         sort_key=sort_key,
     )
+
+    # フォーカスモードから削除した場合は、フォーカスモード自体を終了 + OOBで一覧を更新
+    if is_focus_mode:
+        oob_response = render_todo_list_with_pagination_oob(
+            page_obj,
+            query=query,
+            status_filter=status_filter,
+            sort_key=sort_key,
+            today_completed_count=get_today_completed_count(user_id),
+        )
+        # 空のレスポンス（フォーカスモードを閉じる）+ OOBで一覧更新
+        return HttpResponse(oob_response.content.decode("utf-8"))
+
     return render_todo_list_with_pagination_oob(
         page_obj,
         query=query,
