@@ -16,6 +16,7 @@ from django.core.paginator import Paginator
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
+from django.utils import timezone
 
 from django_todo.auth import get_authenticated_user_id
 from utils.enums import RequestMethod
@@ -51,6 +52,23 @@ class TodoSortKey(StrEnum):
 
 
 DEFAULT_TODO_SORT_KEY: Final[TodoSortKey] = TodoSortKey.CREATED
+
+
+def get_today_completed_count(user_id: int) -> int:
+    """今日完了したTodoの件数を取得する。
+
+    Args:
+        user_id: 対象ユーザーID。
+
+    Returns:
+        今日（ローカル日付）に完了状態になったTodoの件数。
+    """
+    today = timezone.localdate()
+    return TodoItem.objects.filter(
+        user_id=user_id,
+        completed=True,
+        updated_at__date=today,
+    ).count()
 
 
 def normalize_todo_sort_key(raw_sort: str | TodoSortKey | None) -> TodoSortKey:
@@ -267,6 +285,7 @@ def render_todo_list_with_pagination_oob(
     include_main_list: bool = True,
     include_list_oob: bool = False,
     status: HTTPStatus = HTTPStatus.OK,
+    today_completed_count: int = 0,
 ) -> HttpResponse:
     """TodoリストとページネーションをOOBスワップで返す。
 
@@ -293,6 +312,7 @@ def render_todo_list_with_pagination_oob(
         "current_status": status_filter.value,
         "current_sort": sort_key.value,
         "list_querystring": list_querystring,
+        "today_completed_count": today_completed_count,
     }
 
     todo_list_html = ""
@@ -509,6 +529,7 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         sort_key=sort_key,
         include_main_list=False,
         include_list_oob=True,
+        today_completed_count=get_today_completed_count(user_id),
     )
     return HttpResponse(
         item_html + oob_response.content.decode("utf-8"),
@@ -548,6 +569,8 @@ def todo_list(request: HttpRequest) -> HttpResponse:
         sort_key=sort_key,
     )
 
+    today_completed_count = get_today_completed_count(user_id)
+
     return render(
         request,
         "todo/todo_list.html",
@@ -559,6 +582,7 @@ def todo_list(request: HttpRequest) -> HttpResponse:
             "current_status": status_filter.value,
             "current_sort": sort_key.value,
             "list_querystring": list_querystring,
+            "today_completed_count": today_completed_count,
         },
     )
 
@@ -654,6 +678,7 @@ def create_todo_item(request: HttpRequest) -> HttpResponse:
             status_filter=status_filter,
             sort_key=sort_key,
             status=HTTPStatus.CONFLICT,
+            today_completed_count=get_today_completed_count(user_id),
         )
 
     form = TodoItemForm(request.POST)
@@ -679,6 +704,7 @@ def create_todo_item(request: HttpRequest) -> HttpResponse:
             query=query,
             status_filter=status_filter,
             sort_key=sort_key,
+            today_completed_count=get_today_completed_count(user_id),
         )
 
     logger.warning("Todoアイテムの作成に失敗しました: errors=%s", form.errors.as_json())
@@ -697,6 +723,7 @@ def create_todo_item(request: HttpRequest) -> HttpResponse:
         status_filter=status_filter,
         sort_key=sort_key,
         status=HTTPStatus.BAD_REQUEST,
+        today_completed_count=get_today_completed_count(user_id),
     )
 
 
@@ -780,6 +807,7 @@ def update_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         sort_key=sort_key,
         include_main_list=False,
         include_list_oob=True,
+        today_completed_count=get_today_completed_count(user_id),
     )
     return HttpResponse(
         item_html + oob_response.content.decode("utf-8"),
@@ -834,6 +862,7 @@ def delete_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         query=query,
         status_filter=status_filter,
         sort_key=sort_key,
+        today_completed_count=get_today_completed_count(user_id),
     )
 
 
@@ -879,6 +908,7 @@ def delete_all_todo_items(request: HttpRequest) -> HttpResponse:
         query=query,
         status_filter=status_filter,
         sort_key=sort_key,
+        today_completed_count=get_today_completed_count(user_id),
     )
 
 
@@ -924,4 +954,5 @@ def delete_completed_todo_items(request: HttpRequest) -> HttpResponse:
         query=query,
         status_filter=status_filter,
         sort_key=sort_key,
+        today_completed_count=get_today_completed_count(user_id),
     )

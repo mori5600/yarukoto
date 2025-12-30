@@ -1,3 +1,9 @@
-<div id="todo-count" class="mb-2">
+<div id="todo-count" class="todo-count-bar mb-2">
     <span class="todo-info__count">全{{ page_obj.paginator.count }}件</span>
+    {% if today_completed_count > 0 %}
+        <span class="todo-today-progress">
+            <span class="todo-today-progress__icon">✓</span>
+            今日 {{ today_completed_count }}件完了
+        </span>
+    {% endif %}
 </div>
