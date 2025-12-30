@@ -791,7 +791,26 @@ def update_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         sort_key in {TodoSortKey.ACTIVE_FIRST, TodoSortKey.UPDATED}
     )
     if not needs_list_refresh:
-        return HttpResponse(item_html)
+        # 一覧更新不要でも、今日の進捗バッジはOOBで更新する
+        today_count = get_today_completed_count(user_id)
+        todo_count_html = render_to_string(
+            "todo/_todo_count.html",
+            {
+                "page_obj": get_paginated_todos(
+                    user_id=user_id,
+                    page_number=page_number,
+                    query=query,
+                    status=status_filter,
+                    sort_key=sort_key,
+                ),
+                "today_completed_count": today_count,
+            },
+        )
+        todo_count_oob = todo_count_html.replace(
+            f'id="{TODO_COUNT_ID}"',
+            f'id="{TODO_COUNT_ID}" hx-swap-oob="true"',
+        )
+        return HttpResponse(item_html + todo_count_oob)
 
     page_obj = get_paginated_todos(
         user_id=user_id,
