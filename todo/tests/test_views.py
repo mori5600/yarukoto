@@ -358,6 +358,77 @@ class DeleteAllTodoItemsViewTests(TestCase):
         self.assertIn("全0件", content)
 
 
+class DeleteCompletedTodoItemsViewTests(TestCase):
+    """delete_completed_todo_itemsビューのテストケース。"""
+
+    def setUp(self):
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(username="user", password="pass")
+        self.other_user = user_model.objects.create_user(username="other", password="pass")
+        self.client.force_login(self.user)
+
+    def test_delete_completed_removes_only_completed_items(self):
+        """完了済みのみ削除され、未完了は残ることを確認する。"""
+        active = TodoItem.objects.create(user=self.user, description="未完了", completed=False)
+        completed1 = TodoItem.objects.create(user=self.user, description="完了1", completed=True)
+        completed2 = TodoItem.objects.create(user=self.user, description="完了2", completed=True)
+        other_completed = TodoItem.objects.create(
+            user=self.other_user,
+            description="他人の完了",
+            completed=True,
+        )
+        self.assertEqual(TodoItem.objects.count(), 4)
+
+        response = self.client.delete(reverse("todo:delete_completed_todo_items"))
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        self.assertTrue(TodoItem.objects.filter(id=active.pk).exists())
+        self.assertFalse(TodoItem.objects.filter(id=completed1.pk).exists())
+        self.assertFalse(TodoItem.objects.filter(id=completed2.pk).exists())
+        self.assertTrue(TodoItem.objects.filter(id=other_completed.pk).exists())
+
+    def test_delete_completed_is_not_affected_by_search_query(self):
+        """検索条件に依存せず全完了が削除されることを確認する。"""
+        TodoItem.objects.create(user=self.user, description="完了A", completed=True)
+        TodoItem.objects.create(user=self.user, description="完了B", completed=True)
+        TodoItem.objects.create(user=self.user, description="未完了", completed=False)
+
+        url = reverse("todo:delete_completed_todo_items") + "?q=完了A&status=active"
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(TodoItem.objects.filter(user=self.user, completed=True).count(), 0)
+        self.assertEqual(TodoItem.objects.filter(user=self.user, completed=False).count(), 1)
+
+    def test_delete_completed_with_post_method(self):
+        """POSTメソッドでMethod Not Allowedが返されることを確認する。"""
+        TodoItem.objects.create(user=self.user, description="完了", completed=True)
+
+        response = self.client.post(reverse("todo:delete_completed_todo_items"))
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertEqual(TodoItem.objects.filter(user=self.user, completed=True).count(), 1)
+
+    def test_delete_completed_with_get_method(self):
+        """GETメソッドでMethod Not Allowedが返されることを確認する。"""
+        TodoItem.objects.create(user=self.user, description="完了", completed=True)
+
+        response = self.client.get(reverse("todo:delete_completed_todo_items"))
+        self.assertEqual(response.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
+        self.assertEqual(TodoItem.objects.filter(user=self.user, completed=True).count(), 1)
+
+    def test_response_contains_pagination_oob(self):
+        """レスポンスにOOBスワップ属性が含まれることを確認する。"""
+        TodoItem.objects.create(user=self.user, description="完了", completed=True)
+
+        response = self.client.delete(reverse("todo:delete_completed_todo_items"))
+        content = response.content.decode()
+        self.assertIn('hx-swap-oob="true"', content)
+
+    def test_delete_completed_url_exists(self):
+        """ビューのURLが存在することを確認する。"""
+        response = self.client.delete("/delete-completed/")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+
 class EditTodoItemViewTests(TestCase):
     """edit_todo_item / todo_item_partial のテストケース。"""
 

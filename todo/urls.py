@@ -41,5 +41,10 @@ urlpatterns = [
         views.delete_all_todo_items,
         name="delete_all_todo_items",
     ),
+    path(
+        "delete-completed/",
+        views.delete_completed_todo_items,
+        name="delete_completed_todo_items",
+    ),
     path("docs/", views.docs, name="docs"),
 ]

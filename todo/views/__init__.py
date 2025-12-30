@@ -11,6 +11,7 @@ from .todos import (  # noqa: F401
     TODOS_PER_PAGE,
     create_todo_item,
     delete_all_todo_items,
+    delete_completed_todo_items,
     delete_todo_item,
     edit_todo_item,
     get_paginated_todos,

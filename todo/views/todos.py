@@ -880,3 +880,48 @@ def delete_all_todo_items(request: HttpRequest) -> HttpResponse:
         status_filter=status_filter,
         sort_key=sort_key,
     )
+
+
+@login_required
+def delete_completed_todo_items(request: HttpRequest) -> HttpResponse:
+    """完了済みTodoアイテムを一括削除する。
+
+    検索条件やフィルタ状態に依存せず、「完了済み（completed=True）」のTodoのみを削除する。
+    削除後は、現在の検索/フィルタ/並び替え条件でページ1を再描画して返す。
+
+    Args:
+        request: HTTPリクエストオブジェクト。
+
+    Returns:
+        削除成功時: 更新されたTodoリストとページネーション情報のHttpResponse。
+        メソッド不正時: 405 Method Not AllowedのHttpResponse。
+    """
+    if request.method != RequestMethod.DELETE:
+        return HttpResponse(status=HTTPStatus.METHOD_NOT_ALLOWED)
+
+    user_id = get_authenticated_user_id(request)
+    query = parse_todo_search_query(request.GET.get("q"))
+    status_filter = parse_todo_filter_status(request.GET.get("status"))
+    sort_key = parse_todo_sort_key(request.GET.get("sort"))
+
+    queryset = TodoItem.objects.filter(user_id=user_id, completed=True)
+    deleted_count, _ = queryset.delete()
+    logger.info(
+        "完了済みTodoアイテムを一括削除しました: user_id=%s, 削除件数=%d",
+        user_id,
+        deleted_count,
+    )
+
+    page_obj = get_paginated_todos(
+        user_id=user_id,
+        page_number=DEFAULT_PAGE,
+        query=query,
+        status=status_filter,
+        sort_key=sort_key,
+    )
+    return render_todo_list_with_pagination_oob(
+        page_obj,
+        query=query,
+        status_filter=status_filter,
+        sort_key=sort_key,
+    )
