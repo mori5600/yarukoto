@@ -371,6 +371,7 @@ def todo_item_partial(request: HttpRequest, item_id: int) -> HttpResponse:
     query = parse_todo_search_query(request.GET.get("q"))
     status_filter = parse_todo_filter_status(request.GET.get("status"))
     sort_key = parse_todo_sort_key(request.GET.get("sort"))
+    is_focus_mode = request.GET.get("focus") == "1"
     list_querystring = build_todo_list_querystring(
         query=query,
         status=status_filter,
@@ -378,6 +379,15 @@ def todo_item_partial(request: HttpRequest, item_id: int) -> HttpResponse:
     )
 
     todo_item = get_object_or_404(TodoItem, id=item_id, user_id=user_id)
+
+    # フォーカスモード内のキャンセル: アイテム部分のみ返す
+    if is_focus_mode:
+        return render(
+            request,
+            "todo/_todo_focus_item.html",
+            {"todo_item": todo_item},
+        )
+
     return render(
         request,
         "todo/_todo_item.html",
@@ -419,6 +429,7 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     query = parse_todo_search_query(request.GET.get("q"))
     status_filter = parse_todo_filter_status(request.GET.get("status"))
     sort_key = parse_todo_sort_key(request.GET.get("sort"))
+    is_focus_mode = request.GET.get("focus") == "1"
     list_querystring = build_todo_list_querystring(
         query=query,
         status=status_filter,
@@ -428,9 +439,11 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     todo_item = get_object_or_404(TodoItem, id=item_id, user_id=user_id)
 
     if request.method == RequestMethod.GET:
+        # フォーカスモード用の編集テンプレート
+        template = "todo/_todo_focus_item_edit.html" if is_focus_mode else "todo/_todo_item_edit.html"
         return render(
             request,
-            "todo/_todo_item_edit.html",
+            template,
             {
                 "todo_item": todo_item,
                 "current_page": page_number,
@@ -448,9 +461,10 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     max_length = field_max_length if isinstance(field_max_length, int) else DESCRIPTION_MAX_LENGTH
 
     if not new_description:
+        template = "todo/_todo_focus_item_edit.html" if is_focus_mode else "todo/_todo_item_edit.html"
         return render(
             request,
-            "todo/_todo_item_edit.html",
+            template,
             {
                 "todo_item": todo_item,
                 "draft_description": raw_description,
@@ -465,9 +479,10 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         )
 
     if len(new_description) > max_length:
+        template = "todo/_todo_focus_item_edit.html" if is_focus_mode else "todo/_todo_item_edit.html"
         return render(
             request,
-            "todo/_todo_item_edit.html",
+            template,
             {
                 "todo_item": todo_item,
                 "draft_description": raw_description,
@@ -493,6 +508,14 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
             item_id,
             old_description,
             new_description,
+        )
+
+    # フォーカスモード内の編集: アイテム部分のみ返す
+    if is_focus_mode:
+        return render(
+            request,
+            "todo/_todo_focus_item.html",
+            {"todo_item": todo_item},
         )
 
     item_html = render_to_string(
@@ -752,6 +775,7 @@ def update_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     query = parse_todo_search_query(request.GET.get("q"))
     status_filter = parse_todo_filter_status(request.GET.get("status"))
     sort_key = parse_todo_sort_key(request.GET.get("sort"))
+    is_focus_mode = request.GET.get("focus") == "1"
     list_querystring = build_todo_list_querystring(
         query=query,
         status=status_filter,
@@ -769,6 +793,14 @@ def update_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         old_status,
         todo_item.completed,
     )
+
+    # フォーカスモード内の更新: アイテム部分のみ返す
+    if is_focus_mode:
+        return render(
+            request,
+            "todo/_todo_focus_item.html",
+            {"todo_item": todo_item},
+        )
 
     # 通常は「行だけ」返して最速にする。
     item_html = render_to_string(
@@ -861,6 +893,7 @@ def delete_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     query = parse_todo_search_query(request.GET.get("q"))
     status_filter = parse_todo_filter_status(request.GET.get("status"))
     sort_key = parse_todo_sort_key(request.GET.get("sort"))
+    is_focus_mode = request.GET.get("focus") == "1"
     description = todo_item.description
     todo_item.delete()
     logger.info(
@@ -869,6 +902,11 @@ def delete_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         item_id,
         description,
     )
+
+    # フォーカスモードから削除した場合は、フォーカスモード自体を終了
+    if is_focus_mode:
+        return HttpResponse("")
+
     page_obj = get_paginated_todos(
         user_id=user_id,
         page_number=page_number,
@@ -975,3 +1013,49 @@ def delete_completed_todo_items(request: HttpRequest) -> HttpResponse:
         sort_key=sort_key,
         today_completed_count=get_today_completed_count(user_id),
     )
+
+
+@login_required
+def enter_focus_mode(request: HttpRequest, item_id: int) -> HttpResponse:
+    """フォーカスモードに入る（単一Todoをフルスクリーン表示）。
+
+    Args:
+        request: HTTPリクエストオブジェクト。
+        item_id: フォーカスするTodoアイテムID。
+
+    Returns:
+        フォーカスモード用のオーバーレイHTMLを含むHttpResponse。
+        メソッド不正時: 405 Method Not AllowedのHttpResponse。
+    """
+    if request.method != RequestMethod.GET:
+        return HttpResponse(status=HTTPStatus.METHOD_NOT_ALLOWED)
+
+    user_id = get_authenticated_user_id(request)
+    todo_item = get_object_or_404(TodoItem, id=item_id, user_id=user_id)
+
+    return render(
+        request,
+        "todo/_todo_focus_mode.html",
+        {
+            "todo_item": todo_item,
+        },
+    )
+
+
+@login_required
+def exit_focus_mode(request: HttpRequest) -> HttpResponse:
+    """フォーカスモードを終了する。
+
+    空のレスポンスを返してオーバーレイをDOMから削除する。
+
+    Args:
+        request: HTTPリクエストオブジェクト。
+
+    Returns:
+        空のHttpResponse（hx-swap="outerHTML"でオーバーレイが消える）。
+        メソッド不正時: 405 Method Not AllowedのHttpResponse。
+    """
+    if request.method != RequestMethod.GET:
+        return HttpResponse(status=HTTPStatus.METHOD_NOT_ALLOWED)
+
+    return HttpResponse("")

@@ -4,6 +4,7 @@
  * ショートカット:
  *   / : 検索欄にフォーカス
  *   n : 新規Todo入力欄にフォーカス
+ *   f : フォーカスモードで最初のTodoを開く
  *   Esc : 編集モードをキャンセル（編集中の行を元に戻す）
  *
  * アニメーション:
@@ -51,6 +52,16 @@
       $('.todo-form input[name="description"]').focus();
       return;
     }
+
+    // f : フォーカスモードで最初のTodoを開く
+    if (e.key === "f" || e.key === "F") {
+      e.preventDefault();
+      var $firstFocusBtn = $(".todo-item__focus").first();
+      if ($firstFocusBtn.length) {
+        $firstFocusBtn[0].click();
+      }
+      return;
+    }
   });
 
   // ========================================
@@ -76,5 +87,6 @@
   );
   console.log("  / : 検索欄にフォーカス");
   console.log("  n : 新規Todo入力欄にフォーカス");
+  console.log("  f : フォーカスモードで最初のTodoを開く");
   console.log("  Esc : 編集キャンセル / フォーカス解除");
 })(jQuery);
