@@ -112,6 +112,14 @@
   font-variant-numeric: tabular-nums;
 }
 
+.todo-focus-mode__timer--hidden {
+  display: none;
+}
+
+.todo-focus-mode__timer-pause--hidden {
+  display: none;
+}
+
 .todo-focus-mode__edit-form textarea {
   font-size: 2rem;
   line-height: 1.4;

@@ -40,7 +40,7 @@
   function startTimer() {
     if (timerInterval) return;
     $("#timer-start").hide();
-    $("#timer-pause").show();
+    $("#timer-pause").removeClass("todo-focus-mode__timer-pause--hidden");
 
     timerInterval = setInterval(function () {
       remainingSeconds--;
@@ -51,7 +51,7 @@
         timerInterval = null;
         alert("⏰ Pomodoro終了！お疲れ様でした！");
         $("#timer-start").show();
-        $("#timer-pause").hide();
+        $("#timer-pause").addClass("todo-focus-mode__timer-pause--hidden");
         remainingSeconds = POMODORO_DURATION;
         updateTimerDisplay();
       }
@@ -63,7 +63,7 @@
       clearInterval(timerInterval);
       timerInterval = null;
       $("#timer-start").show();
-      $("#timer-pause").hide();
+      $("#timer-pause").addClass("todo-focus-mode__timer-pause--hidden");
     }
   }
 
@@ -89,7 +89,7 @@
       // タイマーを表示（オプション: URLパラメータで制御可能）
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get("timer") === "1") {
-        $("#pomodoro-timer").show();
+        $("#pomodoro-timer").removeClass("todo-focus-mode__timer--hidden");
       }
     }
   });
