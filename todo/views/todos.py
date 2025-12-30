@@ -919,9 +919,12 @@ def delete_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
             status_filter=status_filter,
             sort_key=sort_key,
             today_completed_count=get_today_completed_count(user_id),
+            include_main_list=False,
+            include_list_oob=True,
         )
-        # 空のレスポンス（フォーカスモードを閉じる）+ OOBで一覧更新
-        return HttpResponse(oob_response.content.decode("utf-8"))
+        # OOBでフォーカスモードを空にして削除 + 一覧更新
+        focus_mode_oob = '<div id="todo-focus-mode" hx-swap-oob="delete"></div>'
+        return HttpResponse(focus_mode_oob + oob_response.content.decode("utf-8"))
 
     return render_todo_list_with_pagination_oob(
         page_obj,

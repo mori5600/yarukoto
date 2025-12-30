@@ -78,13 +78,6 @@
   $(document).on("click", "#timer-reset", resetTimer);
 
   // ========================================
-  // タイマー表示トグル
-  // ========================================
-  $(document).on("click", "#timer-toggle", function () {
-    $("#pomodoro-timer").toggleClass("todo-focus-mode__timer--hidden");
-  });
-
-  // ========================================
   // フォーカスモード起動時にタイマーを初期化
   // ========================================
   $(document.body).on("htmx:afterSwap", function (e) {
@@ -93,11 +86,6 @@
       (e.detail.target.tagName === "BODY" && $("#todo-focus-mode").length)
     ) {
       resetTimer();
-      // タイマーを表示（オプション: URLパラメータで制御可能）
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get("timer") === "1") {
-        $("#pomodoro-timer").removeClass("todo-focus-mode__timer--hidden");
-      }
     }
   });
 })(jQuery);
