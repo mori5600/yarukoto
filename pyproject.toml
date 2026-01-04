@@ -1,7 +1,7 @@
 [project]
-name = "django-todo"
+name = "yarukoto"
 version = "0.1.0"
-description = "Add your description here"
+description = "HTMX と Django を活用したシンプルな Todo リストアプリケーション"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -20,10 +20,6 @@ dev = [
 
 [tool.mypy]
 plugins = ["mypy_django_plugin.main"]
-
-[[tool.mypy.overrides]]
-module = ["allauth.*"]
-ignore_missing_imports = true
 
 [tool.django-stubs]
 django_settings_module = "django_todo.settings"
