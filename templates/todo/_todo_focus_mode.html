@@ -2,39 +2,31 @@
 <div id="todo-focus-mode" class="todo-focus-mode">
     <div class="todo-focus-mode__header">
         <div class="todo-focus-mode__header-left">
-            <button class="todo-focus-mode__close"
-                    hx-get="{% url 'todo:exit_focus_mode' %}"
-                    hx-target="#todo-focus-mode"
-                    hx-swap="outerHTML"
-                    title="フォーカスモード終了 (Esc)">
-                <svg xmlns="http://www.w3.org/2000/svg"
-                     width="24"
-                     height="24"
-                     fill="currentColor"
-                     viewBox="0 0 16 16">
-                    <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z" />
+            <button class="todo-focus-mode__close" hx-get="{% url 'todo:exit_focus_mode' %}"
+                hx-target="#todo-focus-mode" hx-swap="outerHTML" title="フォーカスモード終了 (Esc)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z" />
                 </svg>
             </button>
         </div>
         <div class="todo-focus-mode__timer" id="pomodoro-timer">
             <span id="timer-display">25:00</span>
             <button id="timer-start" class="btn btn-sm btn-success">開始</button>
-            <button id="timer-pause"
-                    class="btn btn-sm btn-warning todo-focus-mode__timer-pause--hidden">一時停止</button>
+            <button id="timer-pause" class="btn btn-sm btn-warning todo-focus-mode__timer-pause--hidden">一時停止</button>
             <button id="timer-reset" class="btn btn-sm btn-secondary">リセット</button>
         </div>
     </div>
     <div class="todo-focus-mode__content">
         <label class="todo-focus-mode__checkbox">
-            <input type="checkbox"
-                   class="form-check-input form-check-input--large"
-                   {% if todo_item.completed %}checked{% endif %}
-                   hx-post="{% url 'todo:update_todo_item' todo_item.id %}?focus=1"
-                   hx-target="#todo-focus-item"
-                   hx-swap="outerHTML" />
+            <input type="checkbox" class="form-check-input form-check-input--large" {% if todo_item.completed
+                %}checked{% endif %}
+                hx-post="{% url 'todo:update_todo_item' todo_item.pk %}?focus=1&page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
+                hx-target="#todo-focus-item" hx-swap="outerHTML" />
         </label>
         <div id="todo-focus-item" class="todo-focus-mode__text">
-            <h1 class="{% if todo_item.completed %}text-decoration-line-through{% endif %}">{{ todo_item.description }}</h1>
+            <h1 class="{% if todo_item.completed %}text-decoration-line-through{% endif %}">{{ todo_item.description }}
+            </h1>
             <div class="todo-focus-mode__meta">
                 <span>作成: {{ todo_item.created_at|date:"Y/m/d H:i" }}</span>
                 <span>更新: {{ todo_item.updated_at|date:"Y/m/d H:i" }}</span>
@@ -43,13 +35,10 @@
     </div>
     <div class="todo-focus-mode__actions">
         <button class="btn btn-outline-primary btn-lg"
-                hx-get="{% url 'todo:edit_todo_item' todo_item.id %}?focus=1"
-                hx-target="#todo-focus-item"
-                hx-swap="outerHTML">編集</button>
+            hx-get="{% url 'todo:edit_todo_item' todo_item.id %}?focus=1&page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
+            hx-target="#todo-focus-item" hx-swap="outerHTML">編集</button>
         <button class="btn btn-outline-danger btn-lg"
-                hx-delete="{% url 'todo:delete_todo_item' todo_item.id %}?focus=1"
-                hx-target="this"
-                hx-swap="none"
-                hx-confirm="本当に削除しますか？">削除</button>
+            hx-delete="{% url 'todo:delete_todo_item' todo_item.id %}?focus=1&page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
+            hx-target="this" hx-swap="none" hx-confirm="本当に削除しますか？">削除</button>
     </div>
 </div>

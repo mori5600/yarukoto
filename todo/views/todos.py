@@ -512,11 +512,51 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
 
     # フォーカスモード内の編集: アイテム部分のみ返す
     if is_focus_mode:
-        return render(
-            request,
+        focus_item_html = render_to_string(
             "todo/_todo_focus_item.html",
             {"todo_item": todo_item},
         )
+
+        # フォーカスモードを閉じた後に一覧へ戻っても内容が反映されるよう、背景の一覧も更新する。
+        needs_list_refresh = changed and (bool(query) or sort_key == TodoSortKey.UPDATED)
+        if needs_list_refresh:
+            page_obj = get_paginated_todos(
+                user_id=user_id,
+                page_number=page_number,
+                query=query,
+                status=status_filter,
+                sort_key=sort_key,
+            )
+            oob_response = render_todo_list_with_pagination_oob(
+                page_obj,
+                query=query,
+                status_filter=status_filter,
+                sort_key=sort_key,
+                include_main_list=False,
+                include_list_oob=True,
+                today_completed_count=get_today_completed_count(user_id),
+            )
+            return HttpResponse(
+                focus_item_html + oob_response.content.decode("utf-8"),
+                status=oob_response.status_code,
+            )
+
+        list_item_html = render_to_string(
+            "todo/_todo_item.html",
+            {
+                "todo_item": todo_item,
+                "current_page": page_number,
+                "current_q": query,
+                "current_status": status_filter.value,
+                "current_sort": sort_key.value,
+                "list_querystring": list_querystring,
+            },
+        )
+        list_item_oob = list_item_html.replace(
+            f'id="todo-item-{todo_item.pk}"',
+            f'id="todo-item-{todo_item.pk}" hx-swap-oob="outerHTML"',
+        )
+        return HttpResponse(focus_item_html + list_item_oob)
 
     item_html = render_to_string(
         "todo/_todo_item.html",
@@ -796,11 +836,73 @@ def update_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
 
     # フォーカスモード内の更新: アイテム部分のみ返す
     if is_focus_mode:
-        return render(
-            request,
+        focus_item_html = render_to_string(
             "todo/_todo_focus_item.html",
             {"todo_item": todo_item},
         )
+
+        # 背景の一覧も更新する（閉じた後に状態が反映されるように）。
+        needs_list_refresh = (status_filter != TodoFilterStatus.ALL) or (
+            sort_key in {TodoSortKey.ACTIVE_FIRST, TodoSortKey.UPDATED}
+        )
+        if needs_list_refresh:
+            page_obj = get_paginated_todos(
+                user_id=user_id,
+                page_number=page_number,
+                query=query,
+                status=status_filter,
+                sort_key=sort_key,
+            )
+            oob_response = render_todo_list_with_pagination_oob(
+                page_obj,
+                query=query,
+                status_filter=status_filter,
+                sort_key=sort_key,
+                include_main_list=False,
+                include_list_oob=True,
+                today_completed_count=get_today_completed_count(user_id),
+            )
+            return HttpResponse(
+                focus_item_html + oob_response.content.decode("utf-8"),
+                status=oob_response.status_code,
+            )
+
+        list_item_html = render_to_string(
+            "todo/_todo_item.html",
+            {
+                "todo_item": todo_item,
+                "current_page": page_number,
+                "current_q": query,
+                "current_status": status_filter.value,
+                "current_sort": sort_key.value,
+                "list_querystring": list_querystring,
+            },
+        )
+        list_item_oob = list_item_html.replace(
+            f'id="todo-item-{todo_item.pk}"',
+            f'id="todo-item-{todo_item.pk}" hx-swap-oob="outerHTML"',
+        )
+
+        today_count = get_today_completed_count(user_id)
+        todo_count_html = render_to_string(
+            "todo/_todo_count.html",
+            {
+                "page_obj": get_paginated_todos(
+                    user_id=user_id,
+                    page_number=page_number,
+                    query=query,
+                    status=status_filter,
+                    sort_key=sort_key,
+                ),
+                "today_completed_count": today_count,
+            },
+        )
+        todo_count_oob = todo_count_html.replace(
+            f'id="{TODO_COUNT_ID}"',
+            f'id="{TODO_COUNT_ID}" hx-swap-oob="true"',
+        )
+
+        return HttpResponse(focus_item_html + list_item_oob + todo_count_oob)
 
     # 通常は「行だけ」返して最速にする。
     item_html = render_to_string(
@@ -1045,11 +1147,26 @@ def enter_focus_mode(request: HttpRequest, item_id: int) -> HttpResponse:
     user_id = get_authenticated_user_id(request)
     todo_item = get_object_or_404(TodoItem, id=item_id, user_id=user_id)
 
+    page_number = parse_page_number(request.GET.get("page"), default=DEFAULT_PAGE)
+    query = parse_todo_search_query(request.GET.get("q"))
+    status_filter = parse_todo_filter_status(request.GET.get("status"))
+    sort_key = parse_todo_sort_key(request.GET.get("sort"))
+    list_querystring = build_todo_list_querystring(
+        query=query,
+        status=status_filter,
+        sort_key=sort_key,
+    )
+
     return render(
         request,
         "todo/_todo_focus_mode.html",
         {
             "todo_item": todo_item,
+            "current_page": page_number,
+            "current_q": query,
+            "current_status": status_filter.value,
+            "current_sort": sort_key.value,
+            "list_querystring": list_querystring,
         },
     )
 
