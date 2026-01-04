@@ -1,66 +1,77 @@
 <!DOCTYPE html>
 <html lang="ja">
-
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Simple Django Todo application for managing tasks." />
-    <meta name="keywords" content="django, todo, tasks, todo-list, productivity" />
-    <link rel="icon" href="/static/favicon/favicon.ico" sizes="any" />
-    <link rel="icon" type="image/svg+xml" href="/static/favicon/favicon.svg" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon/favicon-16x16.png" />
-    <link rel="apple-touch-icon" href="/static/favicon/apple-touch-icon.png" />
-    <link rel="manifest" href="/static/favicon/site.webmanifest" />
-    <!-- Vendor -->
-    <link rel="stylesheet" href="/static/css/vendor/bootstrap.min.css" />
-    <!-- App -->
-    <link rel="stylesheet" href="/static/css/app/index.css" />
-    <title>Yarukoto</title>
-</head>
-
-<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-    <header>
-        <nav class="navbar bg-body-tertiary">
-            <div class="container">
-                <div class="d-flex align-items-center gap-3">
-                    <a class="navbar-brand mb-0 h1 d-flex align-items-center" href="/">
-                        <img src="/static/favicon/favicon-32x32.png" width="20" height="20" class="me-2" alt=""
-                            aria-hidden="true" />
-                        Yarukoto
-                    </a>
-                    <a class="nav-link text-muted" href="{% url 'todo:docs' %}">Docs</a>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description"
+              content="Simple Django Todo application for managing tasks." />
+        <meta name="keywords"
+              content="django, todo, tasks, todo-list, productivity" />
+        <link rel="icon" href="/static/favicon/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/svg+xml" href="/static/favicon/favicon.svg" />
+        <link rel="icon"
+              type="image/png"
+              sizes="32x32"
+              href="/static/favicon/favicon-32x32.png" />
+        <link rel="icon"
+              type="image/png"
+              sizes="16x16"
+              href="/static/favicon/favicon-16x16.png" />
+        <link rel="apple-touch-icon" href="/static/favicon/apple-touch-icon.png" />
+        <link rel="manifest" href="/static/favicon/site.webmanifest" />
+        <!-- Vendor -->
+        <link rel="stylesheet" href="/static/css/vendor/bootstrap.min.css" />
+        <!-- App -->
+        <link rel="stylesheet" href="/static/css/app/index.css" />
+        <title>Yarukoto</title>
+    </head>
+    <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+        <header>
+            <nav class="navbar bg-body-tertiary">
+                <div class="container">
+                    <div class="d-flex align-items-center gap-3">
+                        <a class="navbar-brand mb-0 h1 d-flex align-items-center" href="/">
+                            <img src="/static/favicon/favicon-32x32.png"
+                                 width="20"
+                                 height="20"
+                                 class="me-2"
+                                 alt=""
+                                 aria-hidden="true" />
+                            Yarukoto
+                        </a>
+                        <a class="nav-link text-muted" href="{% url 'todo:docs' %}">Docs</a>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        {% if user.is_authenticated %}
+                            <span class="text-muted small me-1">{{ user.get_username }}</span>
+                            <form method="post" action="{% url 'account_logout' %}" class="m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">ログアウト</button>
+                            </form>
+                        {% else %}
+                            <a class="btn btn-sm btn-outline-primary"
+                               href="{% url 'accounts:signup' %}">登録</a>
+                            <a class="btn btn-sm btn-primary" href="{% url 'account_login' %}">ログイン</a>
+                        {% endif %}
+                    </div>
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                    {% if user.is_authenticated %}
-                    <span class="text-muted small me-1">{{ user.get_username }}</span>
-                    <form method="post" action="{% url 'account_logout' %}" class="m-0">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-outline-secondary">ログアウト</button>
-                    </form>
-                    {% else %}
-                    <a class="btn btn-sm btn-primary" href="{% url 'account_login' %}">ログイン</a>
-                    {% endif %}
-                </div>
-            </div>
-        </nav>
-    </header>
-    <main class="container mt-4">
-        {% block content %}
-        {% endblock content %}
-    </main>
-    <!-- Vendor -->
-    <script src="/static/js/vendor/jquery-3.7.1.min.js"></script>
-    <script src="/static/js/vendor/bootstrap.bundle.min.js"></script>
-    <script src="/static/js/vendor/htmx.min.js"></script>
-    <!-- App: Core -->
-    <script src="/static/js/app/core/pomodoro-timer.js"></script>
-    <script src="/static/js/app/core/notification.js"></script>
-    <!-- App: UI -->
-    <script src="/static/js/app/ui/app.js"></script>
-    <script src="/static/js/app/ui/focus.js"></script>
-    {% block extra_body %}
-    {% endblock extra_body %}
-</body>
-
+            </nav>
+        </header>
+        <main class="container mt-4">
+            {% block content %}
+            {% endblock content %}
+        </main>
+        <!-- Vendor -->
+        <script src="/static/js/vendor/jquery-3.7.1.min.js"></script>
+        <script src="/static/js/vendor/bootstrap.bundle.min.js"></script>
+        <script src="/static/js/vendor/htmx.min.js"></script>
+        <!-- App: Core -->
+        <script src="/static/js/app/core/pomodoro-timer.js"></script>
+        <script src="/static/js/app/core/notification.js"></script>
+        <!-- App: UI -->
+        <script src="/static/js/app/ui/app.js"></script>
+        <script src="/static/js/app/ui/focus.js"></script>
+        {% block extra_body %}
+        {% endblock extra_body %}
+    </body>
 </html>
