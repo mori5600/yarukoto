@@ -192,6 +192,14 @@
   margin-bottom: 0.5rem;
 }
 
+/* 横画面（高さが低い場合）: sticky解除してスクロール可能に */
+@media (max-height: 500px) {
+  .sticky-header {
+    position: static;
+    padding: 0.75rem 0.5rem;
+  }
+}
+
 /* Todo行のアニメーション */
 .todo-row {
   animation: todoFadeIn 300ms ease-out both;
