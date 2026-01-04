@@ -9,30 +9,22 @@
                 </div>
                 {% if form.non_field_errors %}
                     <div class="auth-error" role="alert">
-                        {% for error in form.non_field_errors %}
-                            {{ error }}
-                        {% endfor %}
+                        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
                     </div>
                 {% endif %}
                 <form method="post" novalidate>
                     {% csrf_token %}
                     <div class="mb-3">
                         {{ form.username }}
-                        {% if form.username.errors %}
-                            <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
-                        {% endif %}
+                        {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>{% endif %}
                     </div>
                     <div class="mb-3">
                         {{ form.password1 }}
-                        {% if form.password1.errors %}
-                            <div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>
-                        {% endif %}
+                        {% if form.password1.errors %}<div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>{% endif %}
                     </div>
                     <div class="mb-3">
                         {{ form.password2 }}
-                        {% if form.password2.errors %}
-                            <div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>
-                        {% endif %}
+                        {% if form.password2.errors %}<div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>{% endif %}
                     </div>
                     {% if form.invitation_code %}
                         <div class="mb-3">
