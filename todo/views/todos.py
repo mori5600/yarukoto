@@ -18,7 +18,7 @@ from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 
 from django_todo.auth import get_authenticated_user_id
-from utils.enums import RequestMethod
+from shared.enums import RequestMethod
 
 from ..forms import TodoItemForm
 from ..models import TodoItem
