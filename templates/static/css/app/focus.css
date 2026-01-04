@@ -121,8 +121,111 @@
   font-variant-numeric: tabular-nums;
 }
 
+#timer-display {
+  min-width: 5rem;
+  text-align: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.todo-focus-mode__timer-work {
+  background-color: rgba(34, 197, 94, 0.15);
+  color: #16a34a;
+}
+
+.todo-focus-mode__timer-break {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #2563eb;
+}
+
+.todo-focus-mode__timer-longbreak {
+  background-color: rgba(168, 85, 247, 0.15);
+  color: #9333ea;
+}
+
 .todo-focus-mode__timer-pause--hidden {
   display: none;
+}
+
+/* 設定パネル */
+.todo-focus-mode__settings-panel {
+  position: absolute;
+  top: 5rem;
+  right: 2rem;
+  width: 320px;
+  background: var(--bg-secondary, #fff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  animation: settingsPanelSlideIn 200ms ease-out;
+}
+
+.todo-focus-mode__settings-panel--hidden {
+  display: none;
+}
+
+@keyframes settingsPanelSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.todo-focus-mode__settings-content {
+  padding: 1.5rem;
+}
+
+.todo-focus-mode__settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.todo-focus-mode__settings-header h5 {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.todo-focus-mode__settings-close {
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 0.25rem;
+  transition: all 0.15s ease;
+}
+
+.todo-focus-mode__settings-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: var(--text-primary);
+}
+
+.todo-focus-mode__settings-content .form-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.todo-focus-mode__settings-content .form-control {
+  font-size: 1rem;
+}
+
+#timer-settings {
+  padding: 0.25rem 0.5rem;
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .todo-focus-mode__edit-form textarea {
