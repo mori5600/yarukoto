@@ -399,6 +399,57 @@ class PomodoroTimer {
     $("#timer-sessions-before-long-break").val(
       settings.sessionsBeforeLongBreak
     );
+
+    updateNotificationPermissionUI();
+  }
+
+  /**
+   * 通知許可UIを更新
+   */
+  function updateNotificationPermissionUI() {
+    const $status = $("#notification-permission-status");
+    const $btn = $("#notification-permission-btn");
+
+    if (!("Notification" in window)) {
+      $status
+        .text("このブラウザは通知に対応していません")
+        .removeClass(
+          "todo-focus-mode__notification-status--granted todo-focus-mode__notification-status--denied"
+        )
+        .addClass("todo-focus-mode__notification-status--unsupported");
+      $btn.hide();
+      return;
+    }
+
+    switch (Notification.permission) {
+      case "granted":
+        $status
+          .text("✅ 通知は許可されています")
+          .removeClass(
+            "todo-focus-mode__notification-status--denied todo-focus-mode__notification-status--unsupported"
+          )
+          .addClass("todo-focus-mode__notification-status--granted");
+        $btn.hide();
+        break;
+      case "denied":
+        $status
+          .text(
+            "❌ 通知はブロックされています。ブラウザの設定から許可してください。"
+          )
+          .removeClass(
+            "todo-focus-mode__notification-status--granted todo-focus-mode__notification-status--unsupported"
+          )
+          .addClass("todo-focus-mode__notification-status--denied");
+        $btn.hide();
+        break;
+      default:
+        $status
+          .text("通知を許可すると、タイマー終了時にお知らせします")
+          .removeClass(
+            "todo-focus-mode__notification-status--granted todo-focus-mode__notification-status--denied todo-focus-mode__notification-status--unsupported"
+          );
+        $btn.show();
+    }
   }
 
   // ========================================
@@ -465,6 +516,20 @@ class PomodoroTimer {
   $(document).on("click", "#timer-settings-cancel", function () {
     initSettingsPanel();
     closeSettingsPanel();
+  });
+
+  // 通知許可ボタン
+  $(document).on("click", "#notification-permission-btn", function () {
+    if (!("Notification" in window)) return;
+
+    Notification.requestPermission().then(function (permission) {
+      updateNotificationPermissionUI();
+      if (permission === "granted") {
+        new Notification("Yarukoto", {
+          body: "通知が有効になりました！",
+        });
+      }
+    });
   });
 
   // 設定を保存

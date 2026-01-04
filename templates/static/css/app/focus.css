@@ -212,6 +212,26 @@
   color: var(--text-primary);
 }
 
+/* 通知許可ステータス */
+.todo-focus-mode__notification-status {
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.todo-focus-mode__notification-status--granted {
+  color: #16a34a;
+}
+
+.todo-focus-mode__notification-status--denied {
+  color: #dc2626;
+}
+
+.todo-focus-mode__notification-status--unsupported {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
 .todo-focus-mode__settings-content .form-label {
   font-size: 0.875rem;
   color: var(--text-secondary);
