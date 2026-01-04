@@ -75,6 +75,7 @@ INSTALLED_APPS: list[str] = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "accounts",
     "todo",
 ]
 
@@ -221,6 +222,22 @@ TODO_MAX_ITEMS_PER_USER: int = int(os.getenv("TODO_MAX_ITEMS_PER_USER", "200"))
 LOGIN_URL: str = "/accounts/login/"
 LOGIN_REDIRECT_URL: str = "/"
 LOGOUT_REDIRECT_URL: str = "/accounts/login/"
+
+
+# Signup
+# ユーザー登録時の追加検証を設定する。
+# 将来的に別の検証方式（reCAPTCHA等）に移行する場合は、このセクションと
+# accounts/validators.py を変更することで対応可能。
+#
+# SIGNUP_VALIDATOR: 使用するバリデータクラスのパス
+#   - "accounts.validators.InvitationCodeValidator": 招待コード方式（デフォルト）
+#   - "accounts.validators.NoOpValidator": 検証なし（オープン登録）
+# SIGNUP_INVITATION_CODE: 招待コード方式で使用する正解コード（環境変数推奨）
+SIGNUP_VALIDATOR: str = os.getenv(
+    "SIGNUP_VALIDATOR",
+    "accounts.validators.InvitationCodeValidator",
+)
+SIGNUP_INVITATION_CODE: str = os.getenv("SIGNUP_INVITATION_CODE", "")
 
 
 # Logging

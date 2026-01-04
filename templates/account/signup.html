@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="d-flex align-items-center justify-content-center auth-wrapper">
+        <div class="card auth-card auth-fade-in">
+            <div class="card-body p-4">
+                <div class="auth-header">
+                    <h1 class="auth-brand">Yarukoto</h1>
+                    <div class="auth-subtitle">アカウント登録</div>
+                </div>
+                {% if form.non_field_errors %}
+                    <div class="auth-error" role="alert">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.password1 }}
+                        {% if form.password1.errors %}
+                            <div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}
+                            <div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    {% if form.invitation_code %}
+                        <div class="mb-3">
+                            {{ form.invitation_code }}
+                            {% if form.invitation_code.errors %}
+                                <div class="text-danger small mt-1">{{ form.invitation_code.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">登録</button>
+                    </div>
+                </form>
+                <div class="text-center mt-3">
+                    <a href="{% url 'account_login' %}" class="text-muted small">すでにアカウントをお持ちの方</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

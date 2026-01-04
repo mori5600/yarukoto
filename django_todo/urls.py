@@ -29,5 +29,6 @@ urlpatterns = [
         django.contrib.auth.views.LogoutView.as_view(),
         name="account_logout",
     ),
+    django.urls.path("accounts/", django.urls.include("accounts.urls")),
     django.urls.path("", django.urls.include("todo.urls")),
 ]
