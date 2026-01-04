@@ -41,5 +41,20 @@ urlpatterns = [
         views.delete_all_todo_items,
         name="delete_all_todo_items",
     ),
+    path(
+        "delete-completed/",
+        views.delete_completed_todo_items,
+        name="delete_completed_todo_items",
+    ),
+    path(
+        "focus/<int:item_id>/",
+        views.enter_focus_mode,
+        name="enter_focus_mode",
+    ),
+    path(
+        "exit-focus/",
+        views.exit_focus_mode,
+        name="exit_focus_mode",
+    ),
     path("docs/", views.docs, name="docs"),
 ]

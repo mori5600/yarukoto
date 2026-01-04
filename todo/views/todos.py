@@ -16,6 +16,7 @@ from django.core.paginator import Paginator
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
+from django.utils import timezone
 
 from django_todo.auth import get_authenticated_user_id
 from shared.enums import RequestMethod
@@ -51,6 +52,23 @@ class TodoSortKey(StrEnum):
 
 
 DEFAULT_TODO_SORT_KEY: Final[TodoSortKey] = TodoSortKey.CREATED
+
+
+def get_today_completed_count(user_id: int) -> int:
+    """今日完了したTodoの件数を取得する。
+
+    Args:
+        user_id: 対象ユーザーID。
+
+    Returns:
+        今日（ローカル日付）に完了状態になったTodoの件数。
+    """
+    today = timezone.localdate()
+    return TodoItem.objects.filter(
+        user_id=user_id,
+        completed=True,
+        updated_at__date=today,
+    ).count()
 
 
 def normalize_todo_sort_key(raw_sort: str | TodoSortKey | None) -> TodoSortKey:
@@ -267,6 +285,7 @@ def render_todo_list_with_pagination_oob(
     include_main_list: bool = True,
     include_list_oob: bool = False,
     status: HTTPStatus = HTTPStatus.OK,
+    today_completed_count: int = 0,
 ) -> HttpResponse:
     """TodoリストとページネーションをOOBスワップで返す。
 
@@ -293,6 +312,7 @@ def render_todo_list_with_pagination_oob(
         "current_status": status_filter.value,
         "current_sort": sort_key.value,
         "list_querystring": list_querystring,
+        "today_completed_count": today_completed_count,
     }
 
     todo_list_html = ""
@@ -351,6 +371,7 @@ def todo_item_partial(request: HttpRequest, item_id: int) -> HttpResponse:
     query = parse_todo_search_query(request.GET.get("q"))
     status_filter = parse_todo_filter_status(request.GET.get("status"))
     sort_key = parse_todo_sort_key(request.GET.get("sort"))
+    is_focus_mode = request.GET.get("focus") == "1"
     list_querystring = build_todo_list_querystring(
         query=query,
         status=status_filter,
@@ -358,6 +379,15 @@ def todo_item_partial(request: HttpRequest, item_id: int) -> HttpResponse:
     )
 
     todo_item = get_object_or_404(TodoItem, id=item_id, user_id=user_id)
+
+    # フォーカスモード内のキャンセル: アイテム部分のみ返す
+    if is_focus_mode:
+        return render(
+            request,
+            "todo/_todo_focus_item.html",
+            {"todo_item": todo_item},
+        )
+
     return render(
         request,
         "todo/_todo_item.html",
@@ -399,6 +429,7 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     query = parse_todo_search_query(request.GET.get("q"))
     status_filter = parse_todo_filter_status(request.GET.get("status"))
     sort_key = parse_todo_sort_key(request.GET.get("sort"))
+    is_focus_mode = request.GET.get("focus") == "1"
     list_querystring = build_todo_list_querystring(
         query=query,
         status=status_filter,
@@ -408,9 +439,11 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     todo_item = get_object_or_404(TodoItem, id=item_id, user_id=user_id)
 
     if request.method == RequestMethod.GET:
+        # フォーカスモード用の編集テンプレート
+        template = "todo/_todo_focus_item_edit.html" if is_focus_mode else "todo/_todo_item_edit.html"
         return render(
             request,
-            "todo/_todo_item_edit.html",
+            template,
             {
                 "todo_item": todo_item,
                 "current_page": page_number,
@@ -428,9 +461,10 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     max_length = field_max_length if isinstance(field_max_length, int) else DESCRIPTION_MAX_LENGTH
 
     if not new_description:
+        template = "todo/_todo_focus_item_edit.html" if is_focus_mode else "todo/_todo_item_edit.html"
         return render(
             request,
-            "todo/_todo_item_edit.html",
+            template,
             {
                 "todo_item": todo_item,
                 "draft_description": raw_description,
@@ -445,9 +479,10 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         )
 
     if len(new_description) > max_length:
+        template = "todo/_todo_focus_item_edit.html" if is_focus_mode else "todo/_todo_item_edit.html"
         return render(
             request,
-            "todo/_todo_item_edit.html",
+            template,
             {
                 "todo_item": todo_item,
                 "draft_description": raw_description,
@@ -473,6 +508,14 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
             item_id,
             old_description,
             new_description,
+        )
+
+    # フォーカスモード内の編集: アイテム部分のみ返す
+    if is_focus_mode:
+        return render(
+            request,
+            "todo/_todo_focus_item.html",
+            {"todo_item": todo_item},
         )
 
     item_html = render_to_string(
@@ -509,6 +552,7 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         sort_key=sort_key,
         include_main_list=False,
         include_list_oob=True,
+        today_completed_count=get_today_completed_count(user_id),
     )
     return HttpResponse(
         item_html + oob_response.content.decode("utf-8"),
@@ -548,6 +592,8 @@ def todo_list(request: HttpRequest) -> HttpResponse:
         sort_key=sort_key,
     )
 
+    today_completed_count = get_today_completed_count(user_id)
+
     return render(
         request,
         "todo/todo_list.html",
@@ -559,6 +605,7 @@ def todo_list(request: HttpRequest) -> HttpResponse:
             "current_status": status_filter.value,
             "current_sort": sort_key.value,
             "list_querystring": list_querystring,
+            "today_completed_count": today_completed_count,
         },
     )
 
@@ -654,6 +701,7 @@ def create_todo_item(request: HttpRequest) -> HttpResponse:
             status_filter=status_filter,
             sort_key=sort_key,
             status=HTTPStatus.CONFLICT,
+            today_completed_count=get_today_completed_count(user_id),
         )
 
     form = TodoItemForm(request.POST)
@@ -679,6 +727,7 @@ def create_todo_item(request: HttpRequest) -> HttpResponse:
             query=query,
             status_filter=status_filter,
             sort_key=sort_key,
+            today_completed_count=get_today_completed_count(user_id),
         )
 
     logger.warning("Todoアイテムの作成に失敗しました: errors=%s", form.errors.as_json())
@@ -697,6 +746,7 @@ def create_todo_item(request: HttpRequest) -> HttpResponse:
         status_filter=status_filter,
         sort_key=sort_key,
         status=HTTPStatus.BAD_REQUEST,
+        today_completed_count=get_today_completed_count(user_id),
     )
 
 
@@ -725,6 +775,7 @@ def update_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     query = parse_todo_search_query(request.GET.get("q"))
     status_filter = parse_todo_filter_status(request.GET.get("status"))
     sort_key = parse_todo_sort_key(request.GET.get("sort"))
+    is_focus_mode = request.GET.get("focus") == "1"
     list_querystring = build_todo_list_querystring(
         query=query,
         status=status_filter,
@@ -742,6 +793,14 @@ def update_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         old_status,
         todo_item.completed,
     )
+
+    # フォーカスモード内の更新: アイテム部分のみ返す
+    if is_focus_mode:
+        return render(
+            request,
+            "todo/_todo_focus_item.html",
+            {"todo_item": todo_item},
+        )
 
     # 通常は「行だけ」返して最速にする。
     item_html = render_to_string(
@@ -764,7 +823,26 @@ def update_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         sort_key in {TodoSortKey.ACTIVE_FIRST, TodoSortKey.UPDATED}
     )
     if not needs_list_refresh:
-        return HttpResponse(item_html)
+        # 一覧更新不要でも、今日の進捗バッジはOOBで更新する
+        today_count = get_today_completed_count(user_id)
+        todo_count_html = render_to_string(
+            "todo/_todo_count.html",
+            {
+                "page_obj": get_paginated_todos(
+                    user_id=user_id,
+                    page_number=page_number,
+                    query=query,
+                    status=status_filter,
+                    sort_key=sort_key,
+                ),
+                "today_completed_count": today_count,
+            },
+        )
+        todo_count_oob = todo_count_html.replace(
+            f'id="{TODO_COUNT_ID}"',
+            f'id="{TODO_COUNT_ID}" hx-swap-oob="true"',
+        )
+        return HttpResponse(item_html + todo_count_oob)
 
     page_obj = get_paginated_todos(
         user_id=user_id,
@@ -780,6 +858,7 @@ def update_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         sort_key=sort_key,
         include_main_list=False,
         include_list_oob=True,
+        today_completed_count=get_today_completed_count(user_id),
     )
     return HttpResponse(
         item_html + oob_response.content.decode("utf-8"),
@@ -814,6 +893,7 @@ def delete_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     query = parse_todo_search_query(request.GET.get("q"))
     status_filter = parse_todo_filter_status(request.GET.get("status"))
     sort_key = parse_todo_sort_key(request.GET.get("sort"))
+    is_focus_mode = request.GET.get("focus") == "1"
     description = todo_item.description
     todo_item.delete()
     logger.info(
@@ -822,6 +902,7 @@ def delete_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         item_id,
         description,
     )
+
     page_obj = get_paginated_todos(
         user_id=user_id,
         page_number=page_number,
@@ -829,11 +910,28 @@ def delete_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
         status=status_filter,
         sort_key=sort_key,
     )
+
+    # フォーカスモードから削除した場合は、フォーカスモード自体を終了 + OOBで一覧を更新
+    if is_focus_mode:
+        oob_response = render_todo_list_with_pagination_oob(
+            page_obj,
+            query=query,
+            status_filter=status_filter,
+            sort_key=sort_key,
+            today_completed_count=get_today_completed_count(user_id),
+            include_main_list=False,
+            include_list_oob=True,
+        )
+        # OOBでフォーカスモードを空にして削除 + 一覧更新
+        focus_mode_oob = '<div id="todo-focus-mode" hx-swap-oob="delete"></div>'
+        return HttpResponse(focus_mode_oob + oob_response.content.decode("utf-8"))
+
     return render_todo_list_with_pagination_oob(
         page_obj,
         query=query,
         status_filter=status_filter,
         sort_key=sort_key,
+        today_completed_count=get_today_completed_count(user_id),
     )
 
 
@@ -879,4 +977,97 @@ def delete_all_todo_items(request: HttpRequest) -> HttpResponse:
         query=query,
         status_filter=status_filter,
         sort_key=sort_key,
+        today_completed_count=get_today_completed_count(user_id),
     )
+
+
+@login_required
+def delete_completed_todo_items(request: HttpRequest) -> HttpResponse:
+    """完了済みTodoアイテムを一括削除する。
+
+    検索条件やフィルタ状態に依存せず、「完了済み（completed=True）」のTodoのみを削除する。
+    削除後は、現在の検索/フィルタ/並び替え条件でページ1を再描画して返す。
+
+    Args:
+        request: HTTPリクエストオブジェクト。
+
+    Returns:
+        削除成功時: 更新されたTodoリストとページネーション情報のHttpResponse。
+        メソッド不正時: 405 Method Not AllowedのHttpResponse。
+    """
+    if request.method != RequestMethod.DELETE:
+        return HttpResponse(status=HTTPStatus.METHOD_NOT_ALLOWED)
+
+    user_id = get_authenticated_user_id(request)
+    query = parse_todo_search_query(request.GET.get("q"))
+    status_filter = parse_todo_filter_status(request.GET.get("status"))
+    sort_key = parse_todo_sort_key(request.GET.get("sort"))
+
+    queryset = TodoItem.objects.filter(user_id=user_id, completed=True)
+    deleted_count, _ = queryset.delete()
+    logger.info(
+        "完了済みTodoアイテムを一括削除しました: user_id=%s, 削除件数=%d",
+        user_id,
+        deleted_count,
+    )
+
+    page_obj = get_paginated_todos(
+        user_id=user_id,
+        page_number=DEFAULT_PAGE,
+        query=query,
+        status=status_filter,
+        sort_key=sort_key,
+    )
+    return render_todo_list_with_pagination_oob(
+        page_obj,
+        query=query,
+        status_filter=status_filter,
+        sort_key=sort_key,
+        today_completed_count=get_today_completed_count(user_id),
+    )
+
+
+@login_required
+def enter_focus_mode(request: HttpRequest, item_id: int) -> HttpResponse:
+    """フォーカスモードに入る（単一Todoをフルスクリーン表示）。
+
+    Args:
+        request: HTTPリクエストオブジェクト。
+        item_id: フォーカスするTodoアイテムID。
+
+    Returns:
+        フォーカスモード用のオーバーレイHTMLを含むHttpResponse。
+        メソッド不正時: 405 Method Not AllowedのHttpResponse。
+    """
+    if request.method != RequestMethod.GET:
+        return HttpResponse(status=HTTPStatus.METHOD_NOT_ALLOWED)
+
+    user_id = get_authenticated_user_id(request)
+    todo_item = get_object_or_404(TodoItem, id=item_id, user_id=user_id)
+
+    return render(
+        request,
+        "todo/_todo_focus_mode.html",
+        {
+            "todo_item": todo_item,
+        },
+    )
+
+
+@login_required
+def exit_focus_mode(request: HttpRequest) -> HttpResponse:
+    """フォーカスモードを終了する。
+
+    空のレスポンスを返してオーバーレイをDOMから削除する。
+
+    Args:
+        request: HTTPリクエストオブジェクト。
+
+    Returns:
+        空のHttpResponse（hx-swap="outerHTML"でオーバーレイが消える）。
+        メソッド不正時: 405 Method Not AllowedのHttpResponse。
+    """
+    if request.method != RequestMethod.GET:
+        return HttpResponse(status=HTTPStatus.METHOD_NOT_ALLOWED)
+
+    return HttpResponse("")

@@ -1,0 +1,8 @@
+<!-- フォーカスモード内のアイテム表示（通常状態） -->
+<div id="todo-focus-item" class="todo-focus-mode__text">
+    <h1 class="{% if todo_item.completed %}text-decoration-line-through{% endif %}">{{ todo_item.description }}</h1>
+    <div class="todo-focus-mode__meta">
+        <span>作成: {{ todo_item.created_at|date:"Y/m/d H:i" }}</span>
+        <span>更新: {{ todo_item.updated_at|date:"Y/m/d H:i" }}</span>
+    </div>
+</div>
