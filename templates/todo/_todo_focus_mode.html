@@ -19,8 +19,8 @@
     </div>
     <div class="todo-focus-mode__content">
         <label class="todo-focus-mode__checkbox">
-            <input type="checkbox" class="form-check-input form-check-input--large" {% if todo_item.completed
-                %}checked{% endif %}
+            <input type="checkbox" class="form-check-input form-check-input--large" {{
+                todo_item.completed|yesno:"checked," }}
                 hx-post="{% url 'todo:update_todo_item' todo_item.pk %}?focus=1&page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
                 hx-target="#todo-focus-item" hx-swap="outerHTML" />
         </label>
@@ -35,10 +35,10 @@
     </div>
     <div class="todo-focus-mode__actions">
         <button class="btn btn-outline-primary btn-lg"
-            hx-get="{% url 'todo:edit_todo_item' todo_item.id %}?focus=1&page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
+            hx-get="{% url 'todo:edit_todo_item' todo_item.pk %}?focus=1&page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
             hx-target="#todo-focus-item" hx-swap="outerHTML">編集</button>
         <button class="btn btn-outline-danger btn-lg"
-            hx-delete="{% url 'todo:delete_todo_item' todo_item.id %}?focus=1&page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
+            hx-delete="{% url 'todo:delete_todo_item' todo_item.pk %}?focus=1&page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
             hx-target="this" hx-swap="none" hx-confirm="本当に削除しますか？">削除</button>
     </div>
 </div>
