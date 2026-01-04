@@ -1,29 +1,45 @@
-<div id="todo-item-{{ todo_item.id }}" class="todo-item {% if todo_item.completed %}todo-item--completed{% endif %}">
+<div id="todo-item-{{ todo_item.id }}"
+     class="todo-item {% if todo_item.completed %}todo-item--completed{% endif %}">
     <label class="todo-item__checkbox">
-        <input type="checkbox" class="form-check-input" {% if todo_item.completed %}checked{% endif %}
-            hx-post="{% url 'todo:update_todo_item' todo_item.id %}?page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
-            hx-target="#todo-item-{{ todo_item.id }}" hx-swap="outerHTML" />
+        <input type="checkbox"
+               class="form-check-input"
+               {% if todo_item.completed %}checked{% endif %}
+               hx-post="{% url 'todo:update_todo_item' todo_item.id %}?page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
+               hx-target="#todo-item-{{ todo_item.id }}"
+               hx-swap="outerHTML" />
     </label>
-    <span class="todo-item__text {% if todo_item.completed %}text-decoration-line-through{% endif %}" role="button"
-        title="クリックして編集"
-        hx-get="{% url 'todo:edit_todo_item' todo_item.id %}?page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
-        hx-target="#todo-item-{{ todo_item.id }}" hx-swap="outerHTML">{{ todo_item.description }}</span>
+    <span class="todo-item__text {% if todo_item.completed %}text-decoration-line-through{% endif %}"
+          role="button"
+          title="クリックして編集"
+          hx-get="{% url 'todo:edit_todo_item' todo_item.id %}?page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
+          hx-target="#todo-item-{{ todo_item.id }}"
+          hx-swap="outerHTML">{{ todo_item.description }}</span>
     <button class="todo-item__focus"
-        hx-get="{% url 'todo:enter_focus_mode' todo_item.id %}?page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
-        hx-target="body" hx-swap="beforeend" title="フォーカスモード (F)">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
-            <path
-                d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z" />
+            hx-get="{% url 'todo:enter_focus_mode' todo_item.id %}?page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
+            hx-target="body"
+            hx-swap="beforeend"
+            title="フォーカスモード (F)">
+        <svg xmlns="http://www.w3.org/2000/svg"
+             width="18"
+             height="18"
+             fill="currentColor"
+             viewBox="0 0 16 16">
+            <path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z" />
         </svg>
     </button>
     <button class="todo-item__delete"
-        hx-delete="{% url 'todo:delete_todo_item' todo_item.id %}?page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
-        hx-target="#todo-list" hx-swap="innerHTML" hx-confirm="本当に削除しますか？" title="削除">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
-            <path
-                d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
-            <path
-                d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+            hx-delete="{% url 'todo:delete_todo_item' todo_item.id %}?page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
+            hx-target="#todo-list"
+            hx-swap="innerHTML"
+            hx-confirm="本当に削除しますか？"
+            title="削除">
+        <svg xmlns="http://www.w3.org/2000/svg"
+             width="18"
+             height="18"
+             fill="currentColor"
+             viewBox="0 0 16 16">
+            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
         </svg>
     </button>
 </div>
