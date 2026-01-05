@@ -8,7 +8,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from ..models import TodoItem
-from ..views import get_paginated_todos
+from ..queries import get_paginated_todos
 
 
 class GetPaginatedTodosTests(TestCase):
