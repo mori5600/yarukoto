@@ -1,6 +1,7 @@
 /* Docs */
 .docs-page {
   scroll-behavior: smooth;
+  padding-bottom: 3rem;
 }
 
 .docs-hero {
@@ -88,7 +89,11 @@
 }
 
 .docs-section {
-  margin-top: 1rem;
+  margin-top: 2.5rem;
+}
+
+.docs-tech-label {
+  font-size: 0.7rem;
 }
 
 .docs-mini {
