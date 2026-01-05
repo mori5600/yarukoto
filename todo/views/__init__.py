@@ -3,7 +3,6 @@
 外部（urls.py / tests）からはこのパッケージを経由して参照する。
 """
 
-from .docs import docs  # noqa: F401
 from .todos import (  # noqa: F401
     DEFAULT_PAGE,
     PAGINATION_INFO_ID,

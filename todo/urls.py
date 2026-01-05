@@ -56,5 +56,4 @@ urlpatterns = [
         views.exit_focus_mode,
         name="exit_focus_mode",
     ),
-    path("docs/", views.docs, name="docs"),
 ]

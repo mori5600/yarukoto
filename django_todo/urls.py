@@ -30,5 +30,6 @@ urlpatterns = [
         name="account_logout",
     ),
     django.urls.path("accounts/", django.urls.include("accounts.urls")),
+    django.urls.path("", django.urls.include("info.urls")),
     django.urls.path("", django.urls.include("todo.urls")),
 ]
