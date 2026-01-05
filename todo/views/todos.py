@@ -385,7 +385,11 @@ def todo_item_partial(request: HttpRequest, item_id: int) -> HttpResponse:
         return render(
             request,
             "todo/_todo_focus_item.html",
-            {"todo_item": todo_item},
+            {
+                "todo_item": todo_item,
+                "current_page": page_number,
+                "list_querystring": list_querystring,
+            },
         )
 
     return render(
@@ -514,7 +518,11 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     if is_focus_mode:
         focus_item_html = render_to_string(
             "todo/_todo_focus_item.html",
-            {"todo_item": todo_item},
+            {
+                "todo_item": todo_item,
+                "current_page": page_number,
+                "list_querystring": list_querystring,
+            },
         )
 
         # フォーカスモードを閉じた後に一覧へ戻っても内容が反映されるよう、背景の一覧も更新する。
@@ -838,7 +846,11 @@ def update_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     if is_focus_mode:
         focus_item_html = render_to_string(
             "todo/_todo_focus_item.html",
-            {"todo_item": todo_item},
+            {
+                "todo_item": todo_item,
+                "current_page": page_number,
+                "list_querystring": list_querystring,
+            },
         )
 
         # 背景の一覧も更新する（閉じた後に状態が反映されるように）。

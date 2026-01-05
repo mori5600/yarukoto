@@ -1,23 +1,30 @@
 <!-- フォーカスモード内での編集フォーム -->
-<div id="todo-focus-item" class="todo-focus-mode__text">
-    <form hx-post="{% url 'todo:edit_todo_item' todo_item.id %}?focus=1&page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
-          hx-target="#todo-focus-item"
-          hx-swap="outerHTML"
-          class="todo-focus-mode__edit-form">
-        <textarea name="description"
-                  class="form-control form-control--large"
-                  rows="3"
-                  maxlength="255"
-                  required
-                  autofocus>{{ draft_description|default:todo_item.description }}</textarea>
-        {% if error_message %}<div class="text-danger mt-2">{{ error_message }}</div>{% endif %}
-        <div class="mt-3">
-            <button type="submit" class="btn btn-primary btn-lg">保存</button>
-            <button type="button"
-                    class="btn btn-outline-secondary btn-lg"
-                    hx-get="{% url 'todo:todo_item_partial' todo_item.id %}?focus=1&page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
-                    hx-target="#todo-focus-item"
-                    hx-swap="outerHTML">キャンセル</button>
-        </div>
-    </form>
+<div id="todo-focus-item" class="todo-focus-mode__item">
+    <label class="todo-focus-mode__checkbox">
+        {# djlint:off #}
+        <input type="checkbox" class="form-check-input form-check-input--large" {{ todo_item.completed|yesno:"checked," }} disabled>
+        {# djlint:on #}
+    </label>
+    <div class="todo-focus-mode__text">
+        <form hx-post="{% url 'todo:edit_todo_item' todo_item.id %}?focus=1&page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
+              hx-target="#todo-focus-item"
+              hx-swap="outerHTML"
+              class="todo-focus-mode__edit-form">
+            <textarea name="description"
+                      class="form-control form-control--large"
+                      rows="3"
+                      maxlength="255"
+                      required
+                      autofocus>{{ draft_description|default:todo_item.description }}</textarea>
+            {% if error_message %}<div class="text-danger mt-2">{{ error_message }}</div>{% endif %}
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary btn-lg">保存</button>
+                <button type="button"
+                        class="btn btn-outline-secondary btn-lg"
+                        hx-get="{% url 'todo:todo_item_partial' todo_item.id %}?focus=1&page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
+                        hx-target="#todo-focus-item"
+                        hx-swap="outerHTML">キャンセル</button>
+            </div>
+        </form>
+    </div>
 </div>
