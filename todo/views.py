@@ -21,8 +21,8 @@ from django.utils import timezone
 from django_todo.auth import get_authenticated_user_id
 from shared.enums import RequestMethod
 
-from ..forms import TodoItemForm
-from ..models import TodoItem
+from .forms import TodoItemForm
+from .models import TodoItem
 
 logger = logging.getLogger(__name__)
 
