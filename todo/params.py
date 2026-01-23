@@ -15,6 +15,7 @@ from urllib.parse import urlencode
 DEFAULT_PAGE: Final[int] = 1
 TODOS_PER_PAGE: Final[int] = 10
 DESCRIPTION_MAX_LENGTH: Final[int] = 255
+NOTES_MAX_LENGTH: Final[int] = 1000
 
 
 # =============================================================================

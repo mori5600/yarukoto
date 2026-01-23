@@ -1,5 +1,5 @@
-/* フォーカスモード - フルスクリーンオーバーレイ */
-.todo-focus-mode {
+/* Focus mode overlay */
+.p-focus.todo-focus-mode {
   position: fixed;
   top: 0;
   left: 0;
@@ -24,7 +24,7 @@
   }
 }
 
-.todo-focus-mode__header {
+.p-focus .todo-focus-mode__header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -33,13 +33,13 @@
   gap: 1rem;
 }
 
-.todo-focus-mode__header-left {
+.p-focus .todo-focus-mode__header-left {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-.todo-focus-mode__close {
+.p-focus .todo-focus-mode__close {
   width: 3rem;
   height: 3rem;
   border: none;
@@ -53,13 +53,13 @@
   justify-content: center;
 }
 
-.todo-focus-mode__close:hover {
+.p-focus .todo-focus-mode__close:hover {
   background: rgba(220, 38, 38, 0.1);
   color: #dc2626;
   transform: rotate(90deg);
 }
 
-.todo-focus-mode__content {
+.p-focus .todo-focus-mode__content {
   flex: 1 0 auto;
   display: flex;
   align-items: center;
@@ -70,19 +70,19 @@
   width: 100%;
 }
 
-.todo-focus-mode__item {
+.p-focus .todo-focus-mode__item {
   display: flex;
   align-items: center;
   gap: 2rem;
 }
 
-.todo-focus-mode__checkbox {
+.p-focus .todo-focus-mode__checkbox {
   flex-shrink: 0;
   margin: 0;
   cursor: pointer;
 }
 
-.form-check-input--large {
+.p-focus .form-check-input--large {
   width: 3rem;
   height: 3rem;
   border-width: 2px;
@@ -90,11 +90,11 @@
   flex-shrink: 0;
 }
 
-.todo-focus-mode__text {
+.p-focus .todo-focus-mode__text {
   flex: 1;
 }
 
-.todo-focus-mode__text h1 {
+.p-focus .todo-focus-mode__text h1 {
   font-size: 2.5rem;
   line-height: 1.4;
   margin-bottom: 1rem;
@@ -103,14 +103,55 @@
   font-weight: 600;
 }
 
-.todo-focus-mode__meta {
+.p-focus .todo-focus-mode__meta {
   display: flex;
   gap: 2rem;
   color: var(--text-secondary);
   font-size: 1rem;
 }
 
-.todo-focus-mode__actions {
+.p-focus .todo-focus-mode__notes {
+  margin-top: 1.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 0.75rem;
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.p-focus .todo-focus-mode__notes-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.p-focus .todo-focus-mode__notes-body {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.p-focus .todo-focus-mode__notes-editor {
+  margin-top: 1.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 0.75rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.p-focus .todo-focus-mode__notes-input {
+  margin-top: 0.75rem;
+  min-height: 120px;
+  resize: vertical;
+}
+
+.p-focus .todo-focus-mode__actions {
   display: flex;
   justify-content: center;
   gap: 1rem;
@@ -118,7 +159,7 @@
   border-top: 1px solid var(--border-color);
 }
 
-.todo-focus-mode__timer {
+.p-focus .todo-focus-mode__timer {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -127,7 +168,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-#timer-display {
+.p-focus #timer-display {
   min-width: 5rem;
   text-align: center;
   padding: 0.25rem 0.75rem;
@@ -135,27 +176,27 @@
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.todo-focus-mode__timer-work {
+.p-focus .todo-focus-mode__timer-work {
   background-color: rgba(34, 197, 94, 0.15);
   color: #16a34a;
 }
 
-.todo-focus-mode__timer-break {
+.p-focus .todo-focus-mode__timer-break {
   background-color: rgba(59, 130, 246, 0.15);
   color: #2563eb;
 }
 
-.todo-focus-mode__timer-longbreak {
+.p-focus .todo-focus-mode__timer-longbreak {
   background-color: rgba(168, 85, 247, 0.15);
   color: #9333ea;
 }
 
-.todo-focus-mode__timer-pause--hidden {
+.p-focus .todo-focus-mode__timer-pause--hidden {
   display: none;
 }
 
-/* 設定パネル */
-.todo-focus-mode__settings-panel {
+/* Settings panel */
+.p-focus .todo-focus-mode__settings-panel {
   position: absolute;
   top: 5rem;
   right: 2rem;
@@ -168,7 +209,7 @@
   animation: settingsPanelSlideIn 200ms ease-out;
 }
 
-.todo-focus-mode__settings-panel--hidden {
+.p-focus .todo-focus-mode__settings-panel--hidden {
   display: none;
 }
 
@@ -183,24 +224,24 @@
   }
 }
 
-.todo-focus-mode__settings-content {
+.p-focus .todo-focus-mode__settings-content {
   padding: 1.5rem;
 }
 
-.todo-focus-mode__settings-header {
+.p-focus .todo-focus-mode__settings-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
 }
 
-.todo-focus-mode__settings-header h5 {
+.p-focus .todo-focus-mode__settings-header h5 {
   margin: 0;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.todo-focus-mode__settings-close {
+.p-focus .todo-focus-mode__settings-close {
   width: 2rem;
   height: 2rem;
   border: none;
@@ -213,48 +254,48 @@
   transition: all 0.15s ease;
 }
 
-.todo-focus-mode__settings-close:hover {
+.p-focus .todo-focus-mode__settings-close:hover {
   background: rgba(0, 0, 0, 0.1);
   color: var(--text-primary);
 }
 
-/* 通知許可ステータス */
-.todo-focus-mode__notification-status {
+/* Notification status */
+.p-focus .todo-focus-mode__notification-status {
   font-size: 0.875rem;
   margin-bottom: 0.5rem;
   color: var(--text-secondary);
 }
 
-.todo-focus-mode__notification-status--granted {
+.p-focus .todo-focus-mode__notification-status--granted {
   color: #16a34a;
 }
 
-.todo-focus-mode__notification-status--denied {
+.p-focus .todo-focus-mode__notification-status--denied {
   color: #dc2626;
 }
 
-.todo-focus-mode__notification-status--unsupported {
+.p-focus .todo-focus-mode__notification-status--unsupported {
   color: var(--text-secondary);
   font-style: italic;
 }
 
-.todo-focus-mode__settings-content .form-label {
+.p-focus .todo-focus-mode__settings-content .form-label {
   font-size: 0.875rem;
   color: var(--text-secondary);
   margin-bottom: 0.25rem;
 }
 
-.todo-focus-mode__settings-content .form-control {
+.p-focus .todo-focus-mode__settings-content .form-control {
   font-size: 1rem;
 }
 
-#timer-settings {
+.p-focus #timer-settings {
   padding: 0.25rem 0.5rem;
   font-size: 1rem;
   line-height: 1;
 }
 
-.todo-focus-mode__edit-form textarea {
+.p-focus .todo-focus-mode__edit-form textarea {
   font-size: 2rem;
   line-height: 1.4;
   padding: 1.5rem;
@@ -262,85 +303,86 @@
   min-height: 150px;
 }
 
-.form-control--large {
+.p-focus .form-control--large {
   font-size: 2rem;
 }
 
 @media (max-width: 768px) {
-  .todo-focus-mode__header {
+  .p-focus .todo-focus-mode__header {
     flex-direction: column;
     padding: 1rem;
     gap: 0.75rem;
   }
 
-  .todo-focus-mode__header-left {
+  .p-focus .todo-focus-mode__header-left {
     width: 100%;
     justify-content: flex-start;
   }
 
-  .todo-focus-mode__close {
+  .p-focus .todo-focus-mode__close {
     width: 2.5rem;
     height: 2.5rem;
   }
 
-  .todo-focus-mode__timer {
+  .p-focus .todo-focus-mode__timer {
     width: 100%;
     justify-content: center;
     font-size: 1.25rem;
     gap: 0.5rem;
   }
 
-  .todo-focus-mode__timer .btn {
+  .p-focus .todo-focus-mode__timer .btn {
     padding: 0.25rem 0.5rem;
     font-size: 0.875rem;
   }
 
-  #timer-display {
+  .p-focus #timer-display {
     min-width: 4rem;
     padding: 0.25rem 0.5rem;
   }
 
-  .todo-focus-mode__content {
+  .p-focus .todo-focus-mode__content {
+    flex-direction: column;
     padding: 2rem 1rem;
   }
 
-  .todo-focus-mode__item {
+  .p-focus .todo-focus-mode__item {
     flex-direction: column;
     gap: 1.5rem;
   }
 
-  .todo-focus-mode__text h1 {
+  .p-focus .todo-focus-mode__text h1 {
     font-size: 1.5rem;
     text-align: center;
   }
 
-  .form-check-input--large {
+  .p-focus .form-check-input--large {
     width: 2.5rem;
     height: 2.5rem;
     border-width: 2px;
   }
 
-  .todo-focus-mode__actions {
+  .p-focus .todo-focus-mode__actions {
     flex-direction: column;
     padding: 1rem;
   }
 
-  .todo-focus-mode__actions button {
+  .p-focus .todo-focus-mode__actions button {
     width: 100%;
   }
 
-  .todo-focus-mode__meta {
+  .p-focus .todo-focus-mode__meta {
     flex-direction: column;
     gap: 0.5rem;
     text-align: center;
     font-size: 0.875rem;
   }
 
-  .todo-focus-mode__edit-form textarea {
+  .p-focus .todo-focus-mode__edit-form textarea {
     font-size: 1.5rem;
   }
 
-  .todo-focus-mode__settings-panel {
+  .p-focus .todo-focus-mode__settings-panel {
     right: 1rem;
     left: 1rem;
     width: auto;
@@ -350,75 +392,74 @@
     overflow-y: auto;
   }
 
-  .todo-focus-mode__settings-content {
+  .p-focus .todo-focus-mode__settings-content {
     padding: 1rem;
   }
 
-  .todo-focus-mode__settings-content .mb-3 {
+  .p-focus .todo-focus-mode__settings-content .mb-3 {
     margin-bottom: 0.75rem !important;
   }
 
-  .todo-focus-mode__settings-content .form-label {
+  .p-focus .todo-focus-mode__settings-content .form-label {
     margin-bottom: 0.25rem;
   }
 
-  .todo-focus-mode__settings-content .form-control {
+  .p-focus .todo-focus-mode__settings-content .form-control {
     padding: 0.375rem 0.5rem;
   }
 }
 
-/* 横画面（高さが低い場合）*/
 @media (max-height: 500px) {
-  .todo-focus-mode__header {
+  .p-focus .todo-focus-mode__header {
     padding: 0.5rem 1rem;
   }
 
-  .todo-focus-mode__close {
+  .p-focus .todo-focus-mode__close {
     width: 2rem;
     height: 2rem;
   }
 
-  .todo-focus-mode__close svg {
+  .p-focus .todo-focus-mode__close svg {
     width: 16px;
     height: 16px;
   }
 
-  .todo-focus-mode__content {
+  .p-focus .todo-focus-mode__content {
     padding: 1rem;
     gap: 1rem;
   }
 
-  .todo-focus-mode__text h1 {
+  .p-focus .todo-focus-mode__text h1 {
     font-size: 1.25rem;
     margin-bottom: 0.5rem;
   }
 
-  .todo-focus-mode__meta {
+  .p-focus .todo-focus-mode__meta {
     font-size: 0.75rem;
     gap: 1rem;
   }
 
-  .form-check-input--large {
+  .p-focus .form-check-input--large {
     width: 2rem;
     height: 2rem;
   }
 
-  .todo-focus-mode__actions {
+  .p-focus .todo-focus-mode__actions {
     padding: 0.5rem 1rem;
     gap: 0.5rem;
   }
 
-  .todo-focus-mode__actions .btn-lg {
+  .p-focus .todo-focus-mode__actions .btn-lg {
     padding: 0.375rem 1rem;
     font-size: 0.875rem;
   }
 
-  .todo-focus-mode__timer {
+  .p-focus .todo-focus-mode__timer {
     font-size: 1rem;
     gap: 0.5rem;
   }
 
-  #timer-display {
+  .p-focus #timer-display {
     min-width: 3.5rem;
     padding: 0.125rem 0.5rem;
   }

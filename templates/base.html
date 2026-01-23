@@ -19,11 +19,32 @@
               href="/static/favicon/favicon-16x16.png" />
         <link rel="apple-touch-icon" href="/static/favicon/apple-touch-icon.png" />
         <link rel="manifest" href="/static/favicon/site.webmanifest" />
-        <!-- Vendor -->
-        <link rel="stylesheet" href="/static/css/vendor/bootstrap.min.css" />
         <!-- App -->
         <link rel="stylesheet" href="/static/css/app/index.css" />
         <title>Yarukoto</title>
+        <script>
+        (function () {
+            const STORAGE_KEY = "app-theme-preference";
+            const saved = localStorage.getItem(STORAGE_KEY) || "auto";
+            const html = document.documentElement;
+            const prefersDark = window.matchMedia &&
+                window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+            if (saved === "auto") {
+                html.removeAttribute("data-theme");
+                html.setAttribute("data-bs-theme", prefersDark ? "dark" : "light");
+                html.style.colorScheme = "light dark";
+            } else if (saved === "light") {
+                html.setAttribute("data-theme", "light");
+                html.setAttribute("data-bs-theme", "light");
+                html.style.colorScheme = "light";
+            } else if (saved === "dark") {
+                html.setAttribute("data-theme", "dark");
+                html.setAttribute("data-bs-theme", "dark");
+                html.style.colorScheme = "dark";
+            }
+        })();
+        </script>
     </head>
     <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
         <header>
@@ -42,6 +63,28 @@
                         <a class="nav-link text-muted" href="{% url 'info:docs' %}">Docs</a>
                     </div>
                     <div class="d-flex align-items-center gap-2">
+                        <div class="dropdown">
+                            <button id="theme-toggle-btn"
+                                    type="button"
+                                    class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false"
+                                    aria-label="テーマ選択">
+                                <span class="theme-icon">🌐</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end"
+                                aria-labelledby="theme-toggle-btn">
+                                <li>
+                                    <a class="dropdown-item theme-option" data-theme="auto" href="#"><span class="me-2">🌐</span>OS依存</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item theme-option" data-theme="light" href="#"><span class="me-2">☀️</span>ライトモード</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item theme-option" data-theme="dark" href="#"><span class="me-2">🌙</span>ダークモード</a>
+                                </li>
+                            </ul>
+                        </div>
                         {% if user.is_authenticated %}
                             <span class="text-muted small me-1">{{ user.get_username }}</span>
                             <form method="post" action="{% url 'account_logout' %}" class="m-0">
@@ -69,6 +112,7 @@
         <script src="/static/js/app/core/pomodoro-timer.js"></script>
         <script src="/static/js/app/core/notification.js"></script>
         <!-- App: UI -->
+        <script src="/static/js/app/ui/theme.js"></script>
         <script src="/static/js/app/ui/app.js"></script>
         <script src="/static/js/app/ui/focus.js"></script>
         {% block extra_body %}

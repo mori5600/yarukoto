@@ -7,7 +7,7 @@ Result型で成功/失敗を表現し、API化時にも再利用可能。
 from dataclasses import dataclass
 
 from .models import TodoItem
-from .params import DESCRIPTION_MAX_LENGTH
+from .params import DESCRIPTION_MAX_LENGTH, NOTES_MAX_LENGTH
 from .queries import is_todo_limit_reached
 
 # =============================================================================
@@ -25,8 +25,8 @@ class CreateTodoResult:
 
 
 @dataclass(frozen=True)
-class UpdateDescriptionResult:
-    """Todo説明文更新の結果。"""
+class UpdateTodoResult:
+    """Todo更新の結果。"""
 
     success: bool
     todo_item: TodoItem | None = None
@@ -110,13 +110,16 @@ def toggle_todo_completion(todo_item: TodoItem) -> ToggleCompletionResult:
     )
 
 
-def update_todo_description(
+def update_todo_content(
     todo_item: TodoItem,
     new_description: str,
     *,
-    max_length: int | None = None,
-) -> UpdateDescriptionResult:
-    """説明文を更新する。
+    new_notes: str | None = None,
+    notes_in_request: bool = False,
+    max_description_length: int | None = None,
+    max_notes_length: int | None = None,
+) -> UpdateTodoResult:
+    """説明文/メモを更新する。
 
     バリデーション（空文字チェック、最大長チェック）を行い、
     問題なければ更新する。
@@ -124,47 +127,95 @@ def update_todo_description(
     Args:
         todo_item: 対象のTodoItem。
         new_description: 新しい説明文（strip済みを期待）。
-        max_length: 最大長。Noneの場合はモデルから取得。
+        new_notes: 新しいメモ（strip済み）。notes_in_request=False のときは無視。
+        notes_in_request: notes がリクエストに含まれているか。
+        max_description_length: 説明文の最大長。Noneの場合はモデルから取得。
+        max_notes_length: メモの最大長。Noneの場合はモデルから取得。
 
     Returns:
-        UpdateDescriptionResult。changedは実際に変更があったか。
+        UpdateTodoResult。changedは実際に変更があったか。
     """
-    # 最大長の決定
-    if max_length is None:
+    if max_description_length is None:
         description_field = TodoItem._meta.get_field("description")
         field_max_length = getattr(description_field, "max_length", None)
-        max_length = field_max_length if isinstance(field_max_length, int) else DESCRIPTION_MAX_LENGTH
+        max_description_length = (
+            field_max_length if isinstance(field_max_length, int) else DESCRIPTION_MAX_LENGTH
+        )
 
-    # バリデーション
     if not new_description:
-        return UpdateDescriptionResult(
+        return UpdateTodoResult(
             success=False,
             todo_item=todo_item,
             error="Todoを入力してください。",
         )
 
-    if len(new_description) > max_length:
-        return UpdateDescriptionResult(
+    if len(new_description) > max_description_length:
+        return UpdateTodoResult(
             success=False,
             todo_item=todo_item,
-            error=f"Todoは最大{max_length}文字までです。",
+            error=f"Todoは最大{max_description_length}文字までです。",
         )
 
-    # 変更なしの場合
-    if new_description == todo_item.description:
-        return UpdateDescriptionResult(
+    if notes_in_request:
+        if new_notes is None:
+            new_notes = ""
+
+        if max_notes_length is None:
+            notes_field = TodoItem._meta.get_field("notes")
+            field_max_length = getattr(notes_field, "max_length", None)
+            max_notes_length = field_max_length if isinstance(field_max_length, int) else NOTES_MAX_LENGTH
+
+        if len(new_notes) > max_notes_length:
+            return UpdateTodoResult(
+                success=False,
+                todo_item=todo_item,
+                error=f"メモは最大{max_notes_length}文字までです。",
+            )
+
+    changed_fields: list[str] = []
+    if new_description != todo_item.description:
+        todo_item.description = new_description
+        changed_fields.append("description")
+    if notes_in_request and new_notes is not None and new_notes != todo_item.notes:
+        todo_item.notes = new_notes
+        changed_fields.append("notes")
+
+    if not changed_fields:
+        return UpdateTodoResult(
             success=True,
             todo_item=todo_item,
             changed=False,
         )
 
-    # 更新実行
-    todo_item.description = new_description
-    todo_item.save(update_fields=["description", "updated_at"])
-    return UpdateDescriptionResult(
+    todo_item.save(update_fields=[*changed_fields, "updated_at"])
+    return UpdateTodoResult(
         success=True,
         todo_item=todo_item,
         changed=True,
+    )
+
+
+def update_todo_description(
+    todo_item: TodoItem,
+    new_description: str,
+    *,
+    max_length: int | None = None,
+) -> UpdateTodoResult:
+    """説明文を更新する。
+
+    Args:
+        todo_item: 対象のTodoItem。
+        new_description: 新しい説明文（strip済みを期待）。
+        max_length: 最大長。Noneの場合はモデルから取得。
+
+    Returns:
+        UpdateTodoResult。changedは実際に変更があったか。
+    """
+    return update_todo_content(
+        todo_item,
+        new_description,
+        notes_in_request=False,
+        max_description_length=max_length,
     )
 
 

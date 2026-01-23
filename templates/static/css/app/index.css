@@ -1,6 +1,18 @@
-@import url("./fonts.css");
-@import url("./base.css");
-@import url("./auth.css");
-@import url("./todo.css");
-@import url("./docs.css");
-@import url("./focus.css");
+@layer vendor, reset, tokens, base, layout, components, overrides, pages, utilities;
+
+@import url("../vendor/bootstrap.min.css") layer(vendor);
+
+@import url("./settings/fonts.css") layer(tokens);
+@import url("./settings/tokens.css") layer(tokens);
+@import url("./settings/theme.css") layer(tokens);
+
+@import url("./base/base.css") layer(base);
+
+@import url("./overrides/bootstrap.css") layer(overrides);
+
+@import url("./pages/docs.css") layer(pages);
+@import url("./pages/auth.css") layer(pages);
+@import url("./pages/todo.css") layer(pages);
+@import url("./pages/focus.css") layer(pages);
+
+@import url("./utilities/motion.css") layer(utilities);

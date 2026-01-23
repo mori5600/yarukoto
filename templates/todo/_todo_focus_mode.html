@@ -1,5 +1,5 @@
 <!-- フォーカスモード用のフルスクリーンオーバーレイ -->
-<div id="todo-focus-mode" class="todo-focus-mode">
+<div id="todo-focus-mode" class="todo-focus-mode p-focus">
     <div class="todo-focus-mode__header">
         <div class="todo-focus-mode__header-left">
             <button class="todo-focus-mode__close"
@@ -18,7 +18,10 @@
         </div>
         <div class="todo-focus-mode__timer" id="pomodoro-timer">
             <button id="timer-settings"
+                    type="button"
                     class="btn btn-sm btn-outline-secondary"
+                    aria-controls="timer-settings-panel"
+                    aria-expanded="false"
                     title="タイマー設定">⚙️</button>
             <span id="timer-display">25:00</span>
             <button id="timer-start" class="btn btn-sm btn-success">開始</button>
@@ -29,7 +32,8 @@
     </div>
     <!-- タイマー設定パネル（デフォルトは非表示） -->
     <div id="timer-settings-panel"
-         class="todo-focus-mode__settings-panel todo-focus-mode__settings-panel--hidden">
+         class="todo-focus-mode__settings-panel todo-focus-mode__settings-panel--hidden"
+         aria-hidden="true">
         <div class="todo-focus-mode__settings-content">
             <div class="todo-focus-mode__settings-header">
                 <h5>⏱️ タイマー設定</h5>
@@ -86,8 +90,8 @@
                 </button>
             </div>
             <div class="d-flex gap-2">
-                <button id="timer-settings-save" class="btn btn-primary">保存</button>
-                <button id="timer-settings-cancel" class="btn btn-secondary">キャンセル</button>
+                <button id="timer-settings-save" type="button" class="btn btn-primary">保存</button>
+                <button id="timer-settings-cancel" type="button" class="btn btn-secondary">キャンセル</button>
             </div>
         </div>
     </div>

@@ -2,7 +2,10 @@
 <div id="todo-focus-item" class="todo-focus-mode__item">
     <label class="todo-focus-mode__checkbox">
         {# djlint:off #}
-        <input type="checkbox" class="form-check-input form-check-input--large" {{ todo_item.completed|yesno:"checked," }} disabled>
+        <input type="checkbox"
+               class="form-check-input form-check-input--large"
+               {{ todo_item.completed|yesno:"checked," }}
+               disabled>
         {# djlint:on #}
     </label>
     <div class="todo-focus-mode__text">
@@ -17,6 +20,17 @@
                       required
                       autofocus>{{ draft_description|default:todo_item.description }}</textarea>
             {% if error_message %}<div class="text-danger mt-2">{{ error_message }}</div>{% endif %}
+            {% with notes_value=draft_notes|default:todo_item.notes %}
+                <div class="todo-focus-mode__notes-editor">
+                    <label class="todo-focus-mode__notes-label" for="todo-notes">メモ</label>
+                    <textarea id="todo-notes"
+                              name="notes"
+                              class="form-control todo-focus-mode__notes-input"
+                              rows="4"
+                              maxlength="1000"
+                              placeholder="メモ（任意）">{{ notes_value }}</textarea>
+                </div>
+            {% endwith %}
             <div class="mt-3">
                 <button type="submit" class="btn btn-primary btn-lg">保存</button>
                 <button type="button"

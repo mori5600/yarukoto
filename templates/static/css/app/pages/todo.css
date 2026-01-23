@@ -1,17 +1,17 @@
-/* Todo一覧 */
-.todo-container {
+/* Todo list */
+.p-todo.todo-container {
   max-width: 720px;
   margin: 0 auto;
   padding: 0 1rem;
 }
 
-.todo-list {
+.p-todo .todo-list {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.todo-item {
+.p-todo .todo-item {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -26,18 +26,18 @@
   animation: todoFadeIn 300ms ease-out both;
 }
 
-.todo-item:hover {
+.p-todo .todo-item:hover {
   transform: translateX(4px);
   box-shadow: var(--shadow-lg);
   border-color: var(--primary-color);
 }
 
-.todo-item--completed {
+.p-todo .todo-item--completed {
   opacity: 0.7;
 }
 
-/* 完了トグル時のポップアニメーション */
-.todo-item--pop {
+/* Pop animation on toggle */
+.p-todo .todo-item--pop {
   animation: todoPop 300ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
@@ -54,25 +54,25 @@
   }
 }
 
-.todo-item--completed:hover {
+.p-todo .todo-item--completed:hover {
   border-color: var(--success-color);
 }
 
-.todo-item__checkbox {
+.p-todo .todo-item__checkbox {
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.todo-item__text {
+.p-todo .todo-item__text {
   flex: 1;
   font-size: 1rem;
   line-height: 1.5;
   word-break: break-word;
 }
 
-.todo-item__focus {
+.p-todo .todo-item__focus {
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -88,17 +88,17 @@
   opacity: 1;
 }
 
-.todo-item__focus:hover {
+.p-todo .todo-item__focus:hover {
   background: rgba(59, 130, 246, 0.1);
   color: var(--primary-color);
   transform: scale(1.1);
 }
 
-.todo-item__focus:active {
+.p-todo .todo-item__focus:active {
   transform: scale(0.95);
 }
 
-.todo-item__delete {
+.p-todo .todo-item__delete {
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -114,26 +114,26 @@
   opacity: 1;
 }
 
-.todo-item__delete:hover {
+.p-todo .todo-item__delete:hover {
   background: rgba(244, 63, 94, 0.1);
   color: var(--danger-color);
   transform: scale(1.1);
 }
 
-.todo-item__delete:active {
+.p-todo .todo-item__delete:active {
   transform: scale(0.95);
 }
 
-.todo-item__edit-form {
+.p-todo .todo-item__edit-form {
   width: 100%;
 }
 
-.todo-item__edit-form .form-control {
+.p-todo .todo-item__edit-form .form-control {
   flex: 1 1 auto;
   min-width: 0;
 }
 
-.todo-item__edit-form .btn {
+.p-todo .todo-item__edit-form .btn {
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
@@ -142,8 +142,8 @@
   padding-bottom: 0.75rem;
 }
 
-/* 空の状態 */
-.todo-empty {
+/* Empty state */
+.p-todo .todo-empty {
   text-align: center;
   padding: 3rem 1.5rem;
   color: var(--text-secondary);
@@ -153,35 +153,35 @@
   border-radius: 1rem;
 }
 
-.todo-empty__icon {
+.p-todo .todo-empty__icon {
   font-size: 3rem;
   margin-bottom: 1rem;
   opacity: 0.5;
 }
 
-.todo-empty__text {
+.p-todo .todo-empty__text {
   font-size: 1.125rem;
   margin: 0;
 }
 
-/* ローディング */
-.todo-loading {
+/* Loading */
+.p-todo .todo-loading {
   display: flex;
   justify-content: center;
   padding: 2rem;
   color: var(--text-secondary);
 }
 
-/* 旧テーブル用（互換性維持） */
-.col-checkbox {
+/* Legacy table layout */
+.p-todo .col-checkbox {
   width: 50px;
 }
 
-.col-actions {
+.p-todo .col-actions {
   width: 80px;
 }
 
-.sticky-header {
+.p-todo .sticky-header {
   position: sticky;
   top: 0;
   z-index: 100;
@@ -192,16 +192,15 @@
   margin-bottom: 0.5rem;
 }
 
-/* 横画面（高さが低い場合）: sticky解除してスクロール可能に */
 @media (max-height: 500px) {
-  .sticky-header {
+  .p-todo .sticky-header {
     position: static;
     padding: 0.75rem 0.5rem;
   }
 }
 
-/* Todo行のアニメーション */
-.todo-row {
+/* Todo row animation */
+.p-todo .todo-row {
   animation: todoFadeIn 300ms ease-out both;
 }
 
@@ -216,20 +215,12 @@
   }
 }
 
-/* 完了済みタスク */
-.text-decoration-line-through {
-  color: var(--text-secondary);
-  opacity: 0.6;
-  text-decoration: line-through;
-  text-decoration-color: var(--success-color);
-}
-
-/* Todoフォーム */
-.todo-form {
+/* Todo form */
+.p-todo .todo-form {
   margin-bottom: 1.5rem;
 }
 
-.todo-form__inner {
+.p-todo .todo-form__inner {
   display: flex;
   gap: 1rem;
   padding: 1.25rem 1.5rem;
@@ -241,20 +232,20 @@
   box-shadow: var(--shadow);
 }
 
-.todo-form__inner .form-control {
+.p-todo .todo-form__inner .form-control {
   flex: 1;
   padding: 1rem 1.25rem;
   font-size: 1rem;
 }
 
-.todo-form__submit {
+.p-todo .todo-form__submit {
   padding: 1rem 2rem;
   font-size: 1rem;
   white-space: nowrap;
 }
 
-/* Todo情報バー */
-.todo-info {
+/* Info bar */
+.p-todo .todo-info {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -262,40 +253,40 @@
   margin-bottom: 0.5rem;
 }
 
-.todo-info__count {
+.p-todo .todo-info__count {
   color: var(--text-secondary);
   font-size: 0.9375rem;
   font-weight: 500;
 }
 
-.todo-info__actions {
+.p-todo .todo-info__actions {
   display: flex;
   gap: 0.75rem;
 }
 
 @media (max-width: 576px) {
-  .todo-item__edit-form {
+  .p-todo .todo-item__edit-form {
     flex-wrap: wrap;
   }
 
-  .todo-item__edit-form .form-control {
+  .p-todo .todo-item__edit-form .form-control {
     flex-basis: 100%;
   }
 
-  .todo-item__edit-form .btn {
+  .p-todo .todo-item__edit-form .btn {
     flex: 1 1 0;
   }
 
-  .todo-form__inner {
+  .p-todo .todo-form__inner {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .todo-form__submit {
+  .p-todo .todo-form__submit {
     width: 100%;
   }
 
-  .todo-info {
+  .p-todo .todo-info {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
@@ -303,26 +294,26 @@
     padding-right: 0;
   }
 
-  .todo-info__actions {
+  .p-todo .todo-info__actions {
     width: 100%;
     flex-direction: column;
     align-items: stretch;
     gap: 0.5rem;
   }
 
-  .todo-info__actions > * {
+  .p-todo .todo-info__actions > * {
     width: 100%;
   }
 
-  .todo-info__actions .btn {
+  .p-todo .todo-info__actions .btn {
     white-space: nowrap;
   }
 
-  .todo-details {
+  .p-todo .todo-details {
     width: 100%;
   }
 
-  .todo-details__summary {
+  .p-todo .todo-details__summary {
     cursor: pointer;
     list-style: none;
     user-select: none;
@@ -330,28 +321,28 @@
     line-height: 1.25;
   }
 
-  .todo-details__summary::-webkit-details-marker {
+  .p-todo .todo-details__summary::-webkit-details-marker {
     display: none;
   }
 
-  .todo-details__summary::before {
+  .p-todo .todo-details__summary::before {
     content: "▸";
     display: inline-block;
     margin-right: 0.5rem;
   }
 
-  details[open] > .todo-details__summary::before {
+  .p-todo details[open] > .todo-details__summary::before {
     content: "▾";
   }
 }
 
-/* テーブル */
-.table {
+/* Table */
+.p-todo .table {
   border-collapse: separate;
   border-spacing: 0;
 }
 
-.table thead th {
+.p-todo .table thead th {
   background: var(--bg-tertiary);
   color: var(--text-secondary);
   font-weight: 600;
@@ -362,28 +353,29 @@
   padding: 0.875rem 1rem;
 }
 
-.table tbody tr {
+.p-todo .table tbody tr {
   transition: all 0.2s ease;
 }
 
-.table tbody tr:hover {
+.p-todo .table tbody tr:hover {
   background: var(--glass-bg);
   backdrop-filter: blur(4px);
 }
 
-.table tbody td {
+.p-todo .table tbody td {
   padding: 1.2rem 1rem;
   vertical-align: middle;
   border: none;
   border-bottom: 1px solid var(--border-color);
 }
 
-.table tbody tr:last-child td {
+.p-todo .table tbody tr:last-child td {
   border-bottom: none;
 }
 
-/* チェックボックス - カスタムスタイル */
-.form-check-input {
+/* Custom checkbox */
+.p-todo .form-check-input,
+.p-focus .form-check-input {
   width: 1.75rem;
   height: 1.75rem;
   border: 2px solid var(--text-secondary);
@@ -397,13 +389,15 @@
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.35) inset, var(--shadow);
 }
 
-.form-check-input:hover {
+.p-todo .form-check-input:hover,
+.p-focus .form-check-input:hover {
   border-color: var(--success-color);
   transform: scale(1.1);
   box-shadow: 0 0 12px var(--success-glow);
 }
 
-.form-check-input:checked {
+.p-todo .form-check-input:checked,
+.p-focus .form-check-input:checked {
   background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
   border-color: var(--success-color);
   box-shadow: 0 0 16px var(--success-glow);
@@ -413,32 +407,30 @@
   background-repeat: no-repeat;
 }
 
-.form-check-input:focus {
+.p-todo .form-check-input:focus,
+.p-focus .form-check-input:focus {
   box-shadow: 0 0 0 4px var(--success-glow);
   outline: none;
 }
 
-.form-check-input:active {
+.p-todo .form-check-input:active,
+.p-focus .form-check-input:active {
   transform: scale(0.95);
 }
 
-/* チェックボックスのラベル */
-.form-check {
+.p-todo .form-check {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0;
 }
 
-/* 完了済みタスク（重複を避けるために移動） */
-/* .text-decoration-line-through は上部で定義済み */
-
-/* ページネーション */
-.pagination {
+/* Pagination */
+.p-todo .pagination {
   gap: 0.5rem;
 }
 
-.page-link {
+.p-todo .page-link {
   border: 1.5px solid var(--border-color);
   border-radius: 0.5rem;
   color: var(--text-primary);
@@ -449,34 +441,34 @@
   transition: all 0.2s ease;
 }
 
-.page-link:hover {
+.p-todo .page-link:hover {
   background: var(--bg-tertiary);
   border-color: var(--primary-color);
   color: var(--primary-color);
   box-shadow: 0 0 12px var(--primary-glow);
 }
 
-.page-item.active .page-link {
+.p-todo .page-item.active .page-link {
   background: var(--gradient-primary);
   border-color: transparent;
   color: white;
   box-shadow: 0 4px 14px var(--primary-glow);
 }
 
-.page-item.disabled .page-link {
+.p-todo .page-item.disabled .page-link {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
 @media (max-width: 768px) {
-  .table tbody td {
+  .p-todo .table tbody td {
     padding: 0.75rem 0.5rem;
     font-size: 0.875rem;
   }
 }
 
-/* ステータスタブUI */
-.todo-status-tabs {
+/* Status tabs */
+.p-todo .todo-status-tabs {
   display: inline-flex;
   background: var(--bg-secondary);
   border-radius: 0.75rem;
@@ -484,12 +476,12 @@
   gap: 0.25rem;
 }
 
-.todo-status-tabs--mobile {
+.p-todo .todo-status-tabs--mobile {
   display: flex;
   width: 100%;
 }
 
-.todo-status-tabs__tab {
+.p-todo .todo-status-tabs__tab {
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -500,29 +492,29 @@
   white-space: nowrap;
 }
 
-.todo-status-tabs--mobile .todo-status-tabs__tab {
+.p-todo .todo-status-tabs--mobile .todo-status-tabs__tab {
   flex: 1;
   text-align: center;
 }
 
-.todo-status-tabs__tab:hover {
+.p-todo .todo-status-tabs__tab:hover {
   color: var(--text-primary);
   background: var(--glass-bg);
 }
 
-.todo-status-tabs__tab--active {
+.p-todo .todo-status-tabs__tab--active {
   background: var(--gradient-primary);
   color: white;
   box-shadow: 0 2px 8px var(--primary-glow);
 }
 
-.todo-status-tabs__tab--active:hover {
+.p-todo .todo-status-tabs__tab--active:hover {
   color: white;
   background: var(--gradient-primary);
 }
 
-/* 今日の進捗表示 */
-.todo-count-bar {
+/* Daily progress */
+.p-todo .todo-count-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -530,7 +522,7 @@
   gap: 0.5rem;
 }
 
-.todo-today-progress {
+.p-todo .todo-today-progress {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
@@ -543,7 +535,7 @@
   animation: todayProgressPop 400ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
-.todo-today-progress__icon {
+.p-todo .todo-today-progress__icon {
   font-size: 0.875rem;
 }
 

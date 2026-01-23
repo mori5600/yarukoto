@@ -17,6 +17,7 @@ class TodoItem(models.Model):
         id: 自動生成されるプライマリキー。
         user: Todoアイテムの所有者（ユーザー）。
         description: Todoアイテムの説明文。最大255文字。
+        notes: 任意のメモ。空欄可。
         completed: 完了状態を示すブール値。デフォルトはFalse。
         created_at: アイテムの作成日時。自動設定される。
         updated_at: アイテムの最終更新日時。自動更新される。
@@ -31,6 +32,7 @@ class TodoItem(models.Model):
         db_index=True,
     )
     description = models.CharField(max_length=255)
+    notes = models.TextField(blank=True, default="", max_length=1000)
     completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)

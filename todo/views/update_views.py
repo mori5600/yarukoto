@@ -276,23 +276,35 @@ def edit_todo_item(request: HttpRequest, item_id: int) -> HttpResponse:
     # POST: 説明文を更新
     raw_description = request.POST.get("description", "")
     new_description = raw_description.strip()
-    result = services.update_todo_description(todo_item, new_description)
+    raw_notes = request.POST.get("notes") if "notes" in request.POST else None
+    notes_in_request = raw_notes is not None
+    new_notes = raw_notes.strip() if notes_in_request else ""
+    result = services.update_todo_content(
+        todo_item,
+        new_description,
+        new_notes=new_notes,
+        notes_in_request=notes_in_request,
+    )
 
     if not result.success:
         template = "todo/_todo_focus_item_edit.html" if is_focus_mode else "todo/_todo_item_edit.html"
+        context = {
+            "todo_item": todo_item,
+            "draft_description": raw_description,
+            "error_message": result.error,
+            "current_page": page_number,
+            "current_q": query,
+            "current_status": status_filter.value,
+            "current_sort": sort_key.value,
+            "list_querystring": list_querystring,
+        }
+        if notes_in_request:
+            context["draft_notes"] = raw_notes
+
         return render(
             request,
             template,
-            {
-                "todo_item": todo_item,
-                "draft_description": raw_description,
-                "error_message": result.error,
-                "current_page": page_number,
-                "current_q": query,
-                "current_status": status_filter.value,
-                "current_sort": sort_key.value,
-                "list_querystring": list_querystring,
-            },
+            context,
             status=HTTPStatus.BAD_REQUEST,
         )
 

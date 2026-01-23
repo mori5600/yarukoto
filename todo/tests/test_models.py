@@ -1,7 +1,7 @@
 """TodoItemモデルのテスト。"""
 
 from django.contrib.auth import get_user_model
-from django.db.models import CharField
+from django.db.models import CharField, TextField
 from django.test import TestCase
 
 from ..models import TodoItem
@@ -48,3 +48,14 @@ class TodoItemModelTests(TestCase):
         field = TodoItem._meta.get_field("description")
         assert isinstance(field, CharField)
         self.assertEqual(field.max_length, 255)
+
+    def test_notes_default_empty(self):
+        """メモがデフォルトで空文字になることを確認する。"""
+        todo = TodoItem.objects.create(user=self.user, description="テストタスク")
+        self.assertEqual(todo.notes, "")
+
+    def test_notes_max_length(self):
+        """メモの最大長が1000文字であることを確認する。"""
+        field = TodoItem._meta.get_field("notes")
+        assert isinstance(field, TextField)
+        self.assertEqual(field.max_length, 1000)

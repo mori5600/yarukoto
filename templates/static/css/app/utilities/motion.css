@@ -1,0 +1,24 @@
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  body::before,
+  .p-docs {
+    scroll-behavior: auto;
+  }
+
+  .p-docs .docs-fade-in,
+  .p-docs .docs-hero::before,
+  .p-docs .docs-hero::after,
+  .p-docs .docs-mini,
+  .p-auth.auth-wrapper::before,
+  .p-auth.auth-wrapper::after,
+  .p-auth .auth-fade-in,
+  .p-todo .todo-row,
+  body::before,
+  .p-focus.todo-focus-mode {
+    animation: none !important;
+    transition: none !important;
+  }
+}

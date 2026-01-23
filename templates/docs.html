@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-    <div class="docs-page">
+    <div class="docs-page p-docs">
         <!-- Hero -->
         <section class="docs-hero card border-0 bg-gradient-subtle">
             <div class="card-body py-5">
@@ -46,6 +46,8 @@
                         <span class="badge rounded-pill text-bg-light border">Django 6</span>
                         <span class="badge rounded-pill text-bg-light border">HTMX 2</span>
                         <span class="badge rounded-pill text-bg-light border">Bootstrap 5</span>
+                        <span class="badge rounded-pill text-bg-light border">SQLite / PostgreSQL</span>
+                        <span class="badge rounded-pill text-bg-light border">無限スクロール</span>
                     </div>
                 </div>
             </div>
@@ -230,7 +232,7 @@
             </h2>
             <div class="row g-3">
                 <div class="col-6 col-md-4 col-lg-2">
-                    <div class="card border-0 bg-light h-100 text-center py-3">
+                    <div class="card h-100 text-center py-3 docs-tech-card">
                         <div class="card-body p-2">
                             <div class="fw-semibold small">Django 6</div>
                             <div class="text-muted docs-tech-label">Backend</div>
@@ -238,7 +240,7 @@
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
-                    <div class="card border-0 bg-light h-100 text-center py-3">
+                    <div class="card h-100 text-center py-3 docs-tech-card">
                         <div class="card-body p-2">
                             <div class="fw-semibold small">HTMX 2</div>
                             <div class="text-muted docs-tech-label">Interactivity</div>
@@ -246,7 +248,7 @@
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
-                    <div class="card border-0 bg-light h-100 text-center py-3">
+                    <div class="card h-100 text-center py-3 docs-tech-card">
                         <div class="card-body p-2">
                             <div class="fw-semibold small">Bootstrap 5</div>
                             <div class="text-muted docs-tech-label">UI</div>
@@ -254,7 +256,7 @@
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
-                    <div class="card border-0 bg-light h-100 text-center py-3">
+                    <div class="card h-100 text-center py-3 docs-tech-card">
                         <div class="card-body p-2">
                             <div class="fw-semibold small">SQLite</div>
                             <div class="text-muted docs-tech-label">Dev DB</div>
@@ -262,7 +264,7 @@
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
-                    <div class="card border-0 bg-light h-100 text-center py-3">
+                    <div class="card h-100 text-center py-3 docs-tech-card">
                         <div class="card-body p-2">
                             <div class="fw-semibold small">PostgreSQL</div>
                             <div class="text-muted docs-tech-label">Prod DB</div>
@@ -270,7 +272,7 @@
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
-                    <div class="card border-0 bg-light h-100 text-center py-3">
+                    <div class="card h-100 text-center py-3 docs-tech-card">
                         <div class="card-body p-2">
                             <div class="fw-semibold small">Docker</div>
                             <div class="text-muted docs-tech-label">Deploy</div>
@@ -313,6 +315,12 @@
                             <h3 class="h6 fw-semibold mb-2">CSRF 対応</h3>
                             <p class="text-muted small mb-0">
                                 <code>hx-headers</code> でトークンを自動付与。POST/DELETE も安全。
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h3 class="h6 fw-semibold mb-2">フォームリセット</h3>
+                            <p class="text-muted small mb-0">
+                                <code>hx-on::after-request</code> で送信成功時にフォームを自動クリア。
                             </p>
                         </div>
                     </div>

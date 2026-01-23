@@ -62,19 +62,38 @@
   /** @type {PomodoroTimer | null} */
   let timer = null;
 
+  function setSettingsPanelState(isOpen) {
+    const $panel = $("#timer-settings-panel");
+    const $toggle = $("#timer-settings");
+
+    if (isOpen) {
+      $panel.removeClass("todo-focus-mode__settings-panel--hidden");
+      $panel.attr("aria-hidden", "false");
+      $toggle.attr("aria-expanded", "true");
+    } else {
+      $panel.addClass("todo-focus-mode__settings-panel--hidden");
+      $panel.attr("aria-hidden", "true");
+      $toggle.attr("aria-expanded", "false");
+    }
+  }
+
   function closeSettingsPanel() {
-    $("#timer-settings-panel").hide();
+    setSettingsPanelState(false);
   }
 
   function openSettingsPanel() {
-    $("#timer-settings-panel").show();
+    initSettingsPanel();
+    setSettingsPanelState(true);
+    $("#timer-work-duration").trigger("focus");
   }
 
   /**
    * @returns {boolean}
    */
   function isSettingsPanelOpen() {
-    return $("#timer-settings-panel").is(":visible");
+    return !$("#timer-settings-panel").hasClass(
+      "todo-focus-mode__settings-panel--hidden"
+    );
   }
 
   function initSettingsPanel() {
