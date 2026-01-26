@@ -8,12 +8,20 @@
                hx-target="#todo-item-{{ todo_item.id }}"
                hx-swap="outerHTML" />
     </label>
-    <span class="todo-item__text {% if todo_item.completed %}text-decoration-line-through{% endif %}"
-          role="button"
-          title="クリックして編集"
-          hx-get="{% url 'todo:edit_todo_item' todo_item.id %}?page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
-          hx-target="#todo-item-{{ todo_item.id }}"
-          hx-swap="outerHTML">{{ todo_item.description }}</span>
+    <div class="todo-item__main">
+        <span class="todo-item__text {% if todo_item.completed %}text-decoration-line-through{% endif %}"
+              role="button"
+              title="クリックして編集"
+              hx-get="{% url 'todo:edit_todo_item' todo_item.id %}?page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
+              hx-target="#todo-item-{{ todo_item.id }}"
+              hx-swap="outerHTML">{{ todo_item.description }}</span>
+        {% if todo_item.notes %}
+            <details class="todo-item__notes">
+                <summary class="todo-item__notes-summary">📝 メモを表示</summary>
+                <div class="todo-item__notes-body">{{ todo_item.notes|linebreaksbr }}</div>
+            </details>
+        {% endif %}
+    </div>
     <button class="todo-item__focus"
             hx-get="{% url 'todo:enter_focus_mode' todo_item.id %}?page={{ current_page }}{% if list_querystring %}&{{ list_querystring }}{% endif %}"
             hx-target="body"

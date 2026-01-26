@@ -15,6 +15,53 @@
 (function ($) {
   "use strict";
 
+  function setHintStatus(message, tone) {
+    var $status = $("#focus-first-status");
+    if (!$status.length) return;
+
+    var existingTimeout = $status.data("timeoutId");
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+      $status.removeData("timeoutId");
+    }
+
+    $status.removeClass("todo-hint-bar__message--info todo-hint-bar__message--warn");
+
+    if (!message) {
+      $status.text("");
+      return;
+    }
+
+    if (tone) {
+      $status.addClass("todo-hint-bar__message--" + tone);
+    }
+
+    $status.text(message);
+
+    var timeoutId = setTimeout(function () {
+      $status.text("");
+      $status.removeClass("todo-hint-bar__message--info todo-hint-bar__message--warn");
+    }, 2400);
+
+    $status.data("timeoutId", timeoutId);
+  }
+
+  function openFirstTodoInFocusMode() {
+    var $firstActive = $(".todo-item")
+      .not(".todo-item--completed")
+      .find(".todo-item__focus")
+      .first();
+    var $target = $firstActive.length ? $firstActive : $(".todo-item__focus").first();
+
+    if (!$target.length) {
+      setHintStatus("Todoがありません", "warn");
+      return;
+    }
+
+    setHintStatus("フォーカスモードを開きます", "info");
+    $target[0].click();
+  }
+
   // ========================================
   // キーボードショートカット
   // ========================================
@@ -56,10 +103,7 @@
     // f : フォーカスモードで最初のTodoを開く
     if (e.key === "f" || e.key === "F") {
       e.preventDefault();
-      var $firstFocusBtn = $(".todo-item__focus").first();
-      if ($firstFocusBtn.length) {
-        $firstFocusBtn[0].click();
-      }
+      openFirstTodoInFocusMode();
       return;
     }
   });
@@ -76,6 +120,11 @@
         $(this).removeClass("todo-item--pop");
       });
     }
+  });
+
+  $(document).on("click", "#focus-first-btn", function (e) {
+    e.preventDefault();
+    openFirstTodoInFocusMode();
   });
 
   // ========================================

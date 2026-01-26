@@ -7,6 +7,22 @@
             {% include "todo/_todo_count.html" %}
             {% include "todo/_todo_search.html" %}
             {% include "todo/_pagination_info.html" %}
+            <div class="todo-hint-bar" aria-label="操作のヒント">
+                <div class="todo-hint-chips">
+                    <span class="todo-hint-chip">/ で検索</span>
+                    <span class="todo-hint-chip">n で追加</span>
+                    <span class="todo-hint-chip">f でフォーカス</span>
+                </div>
+                <div class="todo-hint-bar__actions">
+                    <button type="button"
+                            id="focus-first-btn"
+                            class="btn btn-sm btn-outline-primary">未完了をフォーカス</button>
+                    <span id="focus-first-status"
+                          class="todo-hint-bar__message"
+                          role="status"
+                          aria-live="polite"></span>
+                </div>
+            </div>
         </div>
         <div id="todo-list" class="todo-list">{% include "todo/_todo_list.html" %}</div>
     </div>
