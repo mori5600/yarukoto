@@ -15,27 +15,61 @@ import sys
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR: Path = Path(__file__).resolve().parent.parent
 
 
 # テスト実行時判定
 TESTING: bool = "test" in sys.argv
+DEV_SERVER: bool = "runserver" in sys.argv
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-# 本番では環境変数 DJANGO_SECRET_KEY を必ず設定すること
-SECRET_KEY: str = os.getenv(
-    "DJANGO_SECRET_KEY",
-    "django-insecure-47vq$-9*n5s-+n)%1@x)355w!sxx(ctig---p%t#*&c#49_swr",
-)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# 本番では環境変数 DJANGO_DEBUG=0 を設定
-DEBUG: bool = os.getenv("DJANGO_DEBUG", "1") == "1"
+#
+# - 本番は必ず False（=0）
+# - 開発時は `manage.py runserver` のとき True をデフォルトにする（利便性）
+# - 明示的に環境変数で上書き可能（優先順: DJANGO_DEBUG > DEBUG(旧) > runserver 判定）
+def _env_bool(name: str, *, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    value = raw.strip().lower()
+    if value in {"1", "true", "t", "yes", "y", "on"}:
+        return True
+    if value in {"0", "false", "f", "no", "n", "off"}:
+        return False
+    return default
+
+
+DEBUG: bool = _env_bool(
+    "DJANGO_DEBUG",
+    default=_env_bool("DEBUG", default=DEV_SERVER),
+)
+
+
+# SECURITY WARNING: keep the secret key used in production secret!
+# 本番では環境変数 DJANGO_SECRET_KEY を必ず設定すること
+_DEFAULT_SECRET_KEY: str = "django-insecure-47vq$-9*n5s-+n)%1@x)355w!sxx(ctig---p%t#*&c#49_swr"
+SECRET_KEY: str = os.getenv("DJANGO_SECRET_KEY", _DEFAULT_SECRET_KEY)
+
+_DEBUG_WAS_EXPLICITLY_CONFIGURED: bool = os.getenv("DJANGO_DEBUG") is not None or os.getenv("DEBUG") is not None
+_RUNNING_UNDER_GUNICORN: bool = any("gunicorn" in arg for arg in sys.argv)
+
+# "DEBUG=False" だけでは開発中の管理コマンド実行（migrate等）でも該当してしまうため、
+# 「本番に近い状況」（gunicorn起動 or 明示的にDEBUGを落としている）に限定して必須化する。
+if (
+    not DEBUG
+    and not TESTING
+    and (_RUNNING_UNDER_GUNICORN or _DEBUG_WAS_EXPLICITLY_CONFIGURED)
+    and SECRET_KEY == _DEFAULT_SECRET_KEY
+):
+    raise ImproperlyConfigured("DJANGO_SECRET_KEY must be set for production-like runs (DJANGO_DEBUG=0).")
 
 
 def _split_csv(value: str) -> list[str]:
